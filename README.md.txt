@@ -1,26 +1,25 @@
-# FairShift – Decent Work Platform (SDG 8)
+# FairShift — SDG 8 Decent Work & Safety Vault
 
-> **Theme:** SDG 8 – Decent Work and Economic Growth  
-> **Target Audience:** Employee-intensive organizations (Construction Sites, Educational Institutions)
+FairShift is an enterprise operations platform designed to align field operations with **UN SDG 8 (Decent Work and Economic Growth)**. It integrates real-time ILO fatigue risk calculations, transparent automated wage breakdown, and client-side cryptographic anonymous grievance vaults.
 
----
+## Key Modules & Technical Features
 
-## 🌟 Architectural Features & Device Compatibility
+### 1. ⏱️ Real-Time Shift & Telemetry Engine (ILO Standard)
+* Calculates real-time fatigue index based on continuous hours worked ($T_{continuous}$) and ambient site temperature ($Temp_{ambient}$).
+* Triggers automated visual and ARIA-announced safety breach warnings when continuous shift duration exceeds 4 hours without rest.
 
-FairShift is built with a **Universal Client Architecture** designed for maximum offline capability, low-end device compatibility, and containerized cloud scalability.
+### 2. 💰 Transparent SDG 8 Wage & Audit Engine
+* Calculates base wages, statutory welfare fund deductions (5%), and mandatory 1.5x overtime premiums.
+* Supports client-side cryptographic payslip generation formatted for PDF exports.
 
-- **Cross-Platform Compatibility:** Runs seamlessly on laptops, desktop browsers, and budget Android smartphones without requiring a local backend runtime.
-- **Offline-First & Zero-Database Architecture:** Utilizes reactive browser state (`localStorage`) pre-seeded with multi-industry operational data.
-- **Containerized Serverless Deployment:** Includes production-ready `Dockerfile` and `nginx.conf` listening on port `8080` for instant deployment to Google Cloud Run.
-- **Enterprise Security Hardening:** Features client-side XSS input sanitization, SHA-256 client metadata stripping for anonymous safety reporting, and role-based access control (RBAC).
+### 3. 🔐 Anonymous Grievance Vault (SHA-256)
+* Strips all device metadata, browser fingerprints, and IP context client-side.
+* Generates cryptographically anchored tokens (`FS-2026-XXXX`) using `Crypto.subtle.digest('SHA-256')`.
 
----
+## Security & Accessibility Standards
+* **Security:** Complete client-side HTML input sanitization against XSS/script injection.
+* **Accessibility (a11y):** Full ARIA labels, `aria-live` dynamic region announcements, semantic HTML5 sectioning (`<main>`, `<header>`, `<nav>`), and high-contrast WCAG 2.1 AAA compliant UI palette.
+* **Testing:** Standardized automated test suite (`test.js`).
 
-## 🚀 How to Run Locally
-
-Clone the repository and open `index.html` directly in any web browser:
-
-```bash
-git clone [https://github.com/Sayantan-3907/Fairshift.git](https://github.com/Sayantan-3907/Fairshift.git)
-cd fairshift
-# Open index.html in your browser
+## How to Run
+Open `index.html` in any web browser or run `npm test` to execute the automated verification suite.
