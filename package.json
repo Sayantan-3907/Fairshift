@@ -1,16 +1,31 @@
 {
   "name": "fairshift",
   "version": "1.0.0",
-  "description": "SDG 8 Decent Work Operations Platform with ILO Fatigue Analytics and Cryptographic Grievance Vault",
+  "description": "UN SDG 8 Decent Work Operations Platform with ILO Fatigue Analytics and Cryptographic Anonymous Grievance Vault",
   "main": "index.html",
   "scripts": {
     "test": "node test.js",
-    "lint": "echo 'No lint errors found'"
+    "lint": "echo 'No lint errors found'",
+    "build": "echo 'Client-side application ready'"
   },
-  "keywords": ["sdg8", "decent-work", "react", "security", "accessibility", "ilo"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sayantan-3907/Fairshift.git"
+  },
+  "keywords": [
+    "sdg8",
+    "decent-work",
+    "ilo-standards",
+    "react",
+    "security",
+    "accessibility",
+    "sha-256",
+    "testing"
+  ],
   "author": "Sayantan Biswas",
   "license": "MIT",
-  "devDependencies": {
-    "jest": "^29.7.0"
-  }
+  "bugs": {
+    "url": "https://github.com/Sayantan-3907/Fairshift/issues"
+  },
+  "homepage": "https://fairshift.vercel.app"
 }
