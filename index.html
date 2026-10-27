@@ -1,15 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FairShift - SDG 8 Decent Work Platform</title>
+  <meta name="description"
+    content="FairShift - SDG 8 Decent Work Operations Platform featuring live fatigue telemetry and cryptographic grievance reporting." />
+  <title>FairShift - SDG 8 Decent Work & Operations Platform</title>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     @media print {
       body * {
@@ -28,169 +29,130 @@
         width: 100%;
       }
     }
+
+    :focus-visible {
+      outline: 2px solid #6366f1;
+      outline-offset: 2px;
+    }
   </style>
 </head>
 
 <body
   class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased selection:bg-indigo-500 selection:text-white">
-  <div id="root"></div>
+  <div id="root" role="region" aria-label="FairShift Application Root"></div>
 
   <script type="text/babel">
-    const { useState, useEffect } = React;
+    const { useState, useEffect, useMemo, useCallback } = React;
 
-    // Helper: SHA-256 hashing for cryptographic client-side anonymity
+    // Security: Input Sanitization Helper against XSS
+    function sanitize(str) {
+      if (typeof str !== 'string') return '';
+      return str.replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;' })[m]);
+    }
+
+    // Security: SHA-256 Hashing for Anonymity
     async function sha256(message) {
       const msgBuffer = new TextEncoder().encode(message);
       const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
-    // Default Seed Data
     const INITIAL_GRIEVANCES = [
-      {
-        id: "FS-2026-89A1",
-        hash: "8a7c2b...4e91",
-        category: "Safety Breach",
-        message: "Mandatory cooling breaks not enforced on Tier-2 construction scaffolding.",
-        status: "Under Investigation",
-        timestamp: "2026-10-27 09:15"
-      },
-      {
-        id: "FS-2026-44C2",
-        hash: "3f9d1e...92a5",
-        category: "Wage Audit",
-        message: "Night shift premium (1.5x) missing from base payroll calculation.",
-        status: "Resolved & Paid",
-        timestamp: "2026-10-26 18:30"
-      }
+      { id: "FS-2026-89A1", category: "Safety Breach", message: "Mandatory cooling breaks not enforced on Tier-2 construction scaffolding.", status: "Under Investigation", timestamp: "2026-10-27 09:15" },
+      { id: "FS-2026-44C2", category: "Wage Audit", message: "Night shift premium (1.5x) missing from base payroll calculation.", status: "Resolved & Paid", timestamp: "2026-10-26 18:30" }
     ];
 
     function App() {
-      // Authentication State
-      const [currentUser, setCurrentUser] = useState(() => {
-        const saved = localStorage.getItem('fs_user');
-        return saved ? JSON.parse(saved) : null;
-      });
+      const [currentUser, setCurrentUser] = useState(() => JSON.parse(localStorage.getItem('fs_user') || 'null'));
       const [loginRole, setLoginRole] = useState('worker');
       const [workerIdInput, setWorkerIdInput] = useState('WRK-3907');
       const [passwordInput, setPasswordInput] = useState('fairshift2026');
 
-      // Global App State
       const [industry, setIndustry] = useState('construction');
-      const [grievances, setGrievances] = useState(() => {
-        const saved = localStorage.getItem('fs_grievances');
-        return saved ? JSON.parse(saved) : INITIAL_GRIEVANCES;
-      });
+      const [grievances, setGrievances] = useState(() => JSON.parse(localStorage.getItem('fs_grievances') || JSON.stringify(INITIAL_GRIEVANCES)));
 
-      // Shift Clock State
       const [shiftActive, setShiftActive] = useState(false);
       const [shiftSeconds, setShiftSeconds] = useState(0);
       const [lastBreakSeconds, setLastBreakSeconds] = useState(0);
       const [siteTemp, setSiteTemp] = useState(34);
 
-      // Wage Calculator State
       const [baseRate, setBaseRate] = useState(120);
       const [hoursWorked, setHoursWorked] = useState(8);
       const [overtimeHours, setOvertimeHours] = useState(2);
       const [nightShift, setNightShift] = useState(true);
 
-      // Grievance Form State
       const [grievanceText, setGrievanceText] = useState('');
       const [grievanceCategory, setGrievanceCategory] = useState('Safety Breach');
       const [lastSubmittedId, setLastSubmittedId] = useState(null);
       const [searchToken, setSearchToken] = useState('');
       const [searchResult, setSearchResult] = useState(null);
 
-      // Persistence
-      useEffect(() => {
-        localStorage.setItem('fs_grievances', JSON.stringify(grievances));
-      }, [grievances]);
+      useEffect(() => { localStorage.setItem('fs_grievances', JSON.stringify(grievances)); }, [grievances]);
+      useEffect(() => { currentUser ? localStorage.setItem('fs_user', JSON.stringify(currentUser)) : localStorage.removeItem('fs_user'); }, [currentUser]);
 
-      useEffect(() => {
-        if (currentUser) {
-          localStorage.setItem('fs_user', JSON.stringify(currentUser));
-        } else {
-          localStorage.removeItem('fs_user');
-        }
-      }, [currentUser]);
-
-      // Timer Engine
       useEffect(() => {
         let timer = null;
         if (shiftActive) {
           timer = setInterval(() => {
-            setShiftSeconds(prev => prev + 1);
-            setLastBreakSeconds(prev => prev + 1);
+            setShiftSeconds(p => p + 1);
+            setLastBreakSeconds(p => p + 1);
           }, 1000);
         }
         return () => clearInterval(timer);
       }, [shiftActive]);
 
-      // Login Handler
-      const handleLogin = (e) => {
+      const handleLogin = useCallback((e) => {
         e.preventDefault();
-        const userObj = {
+        setCurrentUser({
           role: loginRole,
-          id: loginRole === 'worker' ? workerIdInput || 'WRK-3907' : 'EMP-9001',
+          id: sanitize(workerIdInput) || 'WRK-3907',
           name: loginRole === 'worker' ? 'Sayantan Biswas' : 'Site Operations Manager',
           authTime: new Date().toLocaleTimeString()
-        };
-        setCurrentUser(userObj);
-      };
+        });
+      }, [loginRole, workerIdInput]);
 
-      const handleLogout = () => {
-        setCurrentUser(null);
-      };
+      const handleLogout = useCallback(() => setCurrentUser(null), []);
 
-      // Fatigue Calculation
-      const continuousHours = lastBreakSeconds / 3600;
-      const tempFactor = Math.max(0, (siteTemp - 28) * 2.5);
-      const rawFatigue = Math.min(100, Math.round((continuousHours * 18) + tempFactor));
-      const isViolation = continuousHours >= 4 || rawFatigue >= 75;
+      // Efficiency Optimization: Memoized Fatigue Calculation
+      const fatigueData = useMemo(() => {
+        const continuousHours = lastBreakSeconds / 3600;
+        const tempFactor = Math.max(0, (siteTemp - 28) * 2.5);
+        const rawFatigue = Math.min(100, Math.round((continuousHours * 18) + tempFactor));
+        return { continuousHours, rawFatigue, isViolation: continuousHours >= 4 || rawFatigue >= 75 };
+      }, [lastBreakSeconds, siteTemp]);
 
-      // Wage Calculation
-      const regularPay = hoursWorked * baseRate;
-      const otRate = baseRate * 1.5;
-      const otPay = overtimeHours * otRate;
-      const nightBonus = nightShift ? 250 : 0;
-      const grossPay = regularPay + otPay + nightBonus;
-      const statutoryDeductions = Math.round(grossPay * 0.05);
-      const netPay = grossPay - statutoryDeductions;
+      // Efficiency Optimization: Memoized Payroll Engine
+      const payrollData = useMemo(() => {
+        const regularPay = hoursWorked * baseRate;
+        const otRate = baseRate * 1.5;
+        const otPay = overtimeHours * otRate;
+        const nightBonus = nightShift ? 250 : 0;
+        const grossPay = regularPay + otPay + nightBonus;
+        const statutoryDeductions = Math.round(grossPay * 0.05);
+        return { regularPay, otRate, otPay, grossPay, statutoryDeductions, netPay: grossPay - statutoryDeductions };
+      }, [hoursWorked, baseRate, overtimeHours, nightShift]);
 
-      // Actions
-      const handleStartShift = () => setShiftActive(true);
-      const handleTakeBreak = () => {
-        setLastBreakSeconds(0);
-        alert("Rest break recorded. Continuous fatigue timer reset per ILO Standards.");
-      };
-      const handleEndShift = () => {
-        setShiftActive(false);
-        alert(`Shift concluded. Total duration: ${Math.floor(shiftSeconds / 3600)}h ${Math.floor((shiftSeconds % 3600) / 60)}m.`);
-      };
-
-      const handleGrievanceSubmit = async (e) => {
+      const handleGrievanceSubmit = useCallback(async (e) => {
         e.preventDefault();
-        if (!grievanceText.trim()) return;
+        const cleanText = sanitize(grievanceText);
+        if (!cleanText.trim()) return;
 
         const salt = Math.random().toString(36).substring(2);
-        const rawString = `${Date.now()}-${salt}-${grievanceText}`;
-        const hashed = await sha256(rawString);
+        const hashed = await sha256(`${Date.now()}-${salt}-${cleanText}`);
         const publicToken = `FS-2026-${hashed.substring(0, 4).toUpperCase()}`;
 
         const newEntry = {
           id: publicToken,
-          hash: hashed.substring(0, 12) + "...",
           category: grievanceCategory,
-          message: grievanceText,
+          message: cleanText,
           status: "Under Investigation",
           timestamp: new Date().toISOString().replace('T', ' ').substring(0, 16)
         };
 
-        setGrievances([newEntry, ...grievances]);
+        setGrievances(prev => [newEntry, ...prev]);
         setLastSubmittedId(publicToken);
         setGrievanceText('');
-      };
+      }, [grievanceText, grievanceCategory]);
 
       const handleSearchToken = (e) => {
         e.preventDefault();
@@ -198,7 +160,6 @@
         setSearchResult(found || "NOT_FOUND");
       };
 
-      // Demo Scenario Presets for Judges
       const loadScenario = (type) => {
         if (type === 'HEAT_CRISIS') {
           setCurrentUser({ role: 'worker', id: 'WRK-3907', name: 'Sayantan Biswas' });
@@ -223,7 +184,6 @@
           setSiteTemp(34);
           setLastSubmittedId(null);
           setSearchResult(null);
-          alert("Platform reset to pristine default state.");
         }
       };
 
@@ -234,356 +194,223 @@
         return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
       };
 
-      // LOGIN SCREEN
       if (!currentUser) {
         return (
-          <div className="min-h-screen flex items-center justify-center px-4 bg-slate-900 relative overflow-hidden">
-            <div className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl"></div>
-            <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-emerald-600/20 rounded-full blur-3xl"></div>
-
-            <div className="max-w-md w-full bg-slate-950/80 border border-slate-800 rounded-3xl p-8 backdrop-blur-xl shadow-2xl z-10">
-              <div className="text-center mb-8">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 to-emerald-500 flex items-center justify-center font-black text-2xl text-white mx-auto mb-3 shadow-lg shadow-indigo-500/20">
-                  FS
-                </div>
+          <main className="min-h-screen flex items-center justify-center px-4 bg-slate-900 relative overflow-hidden" aria-label="Authentication Portal">
+            <div className="max-w-md w-full bg-slate-950/80 border border-slate-800 rounded-3xl p-8 backdrop-blur-xl shadow-2xl">
+              <header className="text-center mb-8">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 to-emerald-500 flex items-center justify-center font-black text-2xl text-white mx-auto mb-3">FS</div>
                 <h1 className="text-2xl font-bold text-white tracking-wide">FairShift</h1>
-                <p className="text-xs text-emerald-400 font-medium mt-1">SDG 8 Decent Work & Safety Vault</p>
-              </div>
+                <p className="text-xs text-emerald-400 font-medium mt-1">SDG 8 Decent Work Operations Platform</p>
+              </header>
 
-              {/* Role Selector Tabs */}
-              <div className="bg-slate-900 p-1 rounded-xl flex gap-1 mb-6 border border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => { setLoginRole('worker'); setWorkerIdInput('WRK-3907'); }}
-                  className={`flex-1 py-2 rounded-lg text-xs font-semibold transition ${loginRole === 'worker' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
-                >
-                  👷 Worker Portal
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setLoginRole('admin'); setWorkerIdInput('EMP-9001'); }}
-                  className={`flex-1 py-2 rounded-lg text-xs font-semibold transition ${loginRole === 'admin' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
-                >
-                  🏢 Employer / Audit
-                </button>
-              </div>
+              <nav className="bg-slate-900 p-1 rounded-xl flex gap-1 mb-6 border border-slate-800" aria-label="Role Selection">
+                <button type="button" onClick={() => { setLoginRole('worker'); setWorkerIdInput('WRK-3907'); }} className={`flex-1 py-2 rounded-lg text-xs font-semibold ${loginRole === 'worker' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`} aria-pressed={loginRole === 'worker'}>👷 Worker Portal</button>
+                <button type="button" onClick={() => { setLoginRole('admin'); setWorkerIdInput('EMP-9001'); }} className={`flex-1 py-2 rounded-lg text-xs font-semibold ${loginRole === 'admin' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`} aria-pressed={loginRole === 'admin'}>🏢 Employer / Audit</button>
+              </nav>
 
-              <form onSubmit={handleLogin} className="space-y-4">
+              <form onSubmit={handleLogin} className="space-y-4" aria-label="Login Form">
                 <div>
-                  <label className="text-xs text-slate-400 block mb-1">
-                    {loginRole === 'worker' ? 'Worker ID / Badge Number' : 'Employer Admin ID'}
-                  </label>
-                  <input
-                    type="text"
-                    value={workerIdInput}
-                    onChange={(e) => setWorkerIdInput(e.target.value)}
-                    required
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-indigo-500 transition font-mono"
-                  />
+                  <label htmlFor="worker-id" className="text-xs text-slate-400 block mb-1">{loginRole === 'worker' ? 'Worker ID / Badge Number' : 'Employer Admin ID'}</label>
+                  <input id="worker-id" type="text" value={workerIdInput} onChange={(e) => setWorkerIdInput(e.target.value)} required className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white font-mono outline-none focus:border-indigo-500" aria-required="true" />
                 </div>
-
                 <div>
-                  <label className="text-xs text-slate-400 block mb-1">Authentication Key</label>
-                  <input
-                    type="password"
-                    value={passwordInput}
-                    onChange={(e) => setPasswordInput(e.target.value)}
-                    required
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-indigo-500 transition font-mono"
-                  />
+                  <label htmlFor="auth-key" className="text-xs text-slate-400 block mb-1">Authentication Key</label>
+                  <input id="auth-key" type="password" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} required className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white font-mono outline-none focus:border-indigo-500" aria-required="true" />
                 </div>
-
-                <button
-                  type="submit"
-                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-xl font-bold text-xs transition shadow-lg shadow-indigo-600/30 mt-2"
-                >
-                  Authenticate & Launch Session
-                </button>
+                <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-xl font-bold text-xs transition shadow-lg mt-2" aria-label="Authenticate Session">Authenticate & Launch Session</button>
               </form>
 
-              {/* Floating Quick Demo Trigger for Login Screen */}
-              <div className="mt-8 pt-6 border-t border-slate-800 text-center">
+              <footer className="mt-8 pt-6 border-t border-slate-800 text-center">
                 <p className="text-[11px] text-slate-500 mb-3">Quick Evaluate (Skip Login):</p>
                 <div className="flex gap-2 justify-center">
-                  <button onClick={() => loadScenario('HEAT_CRISIS')} className="bg-rose-500/10 border border-rose-500/30 text-rose-300 px-3 py-1.5 rounded-lg text-[10px] font-medium hover:bg-rose-500/20 transition">
-                    ⚡ Heat Hazard Demo
-                  </button>
-                  <button onClick={() => loadScenario('WAGE_AUDIT')} className="bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 px-3 py-1.5 rounded-lg text-[10px] font-medium hover:bg-indigo-500/20 transition">
-                    ⚡ Wage Audit Demo
-                  </button>
+                  <button onClick={() => loadScenario('HEAT_CRISIS')} className="bg-rose-500/10 border border-rose-500/30 text-rose-300 px-3 py-1.5 rounded-lg text-[10px] font-medium hover:bg-rose-500/20">⚡ Heat Hazard Demo</button>
+                  <button onClick={() => loadScenario('WAGE_AUDIT')} className="bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 px-3 py-1.5 rounded-lg text-[10px] font-medium hover:bg-indigo-500/20">⚡ Wage Audit Demo</button>
                 </div>
-              </div>
-
+              </footer>
             </div>
-          </div>
+          </main>
         );
       }
 
-      // MAIN APP (AUTHENTICATED)
       return (
         <div className="pb-24">
-          {/* Header Navigation */}
-          <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-40 px-6 py-4 flex flex-wrap justify-between items-center gap-4">
+          <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-40 px-6 py-4 flex flex-wrap justify-between items-center gap-4" role="banner">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-emerald-500 flex items-center justify-center font-black text-xl text-white shadow-lg shadow-indigo-500/20">
-                FS
-              </div>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-emerald-500 flex items-center justify-center font-black text-xl text-white">FS</div>
               <div>
-                <h1 className="font-bold text-lg leading-tight tracking-wide text-white">FairShift</h1>
+                <h1 className="font-bold text-lg text-white">FairShift</h1>
                 <p className="text-xs text-emerald-400 font-medium">SDG 8 Decent Work Engine</p>
               </div>
             </div>
 
             <div className="flex items-center gap-4">
-              <select
-                value={industry}
-                onChange={(e) => setIndustry(e.target.value)}
-                className="bg-slate-900 text-xs text-slate-300 border border-slate-700 rounded-lg px-3 py-2 outline-none focus:border-indigo-500"
-              >
+              <select value={industry} onChange={(e) => setIndustry(e.target.value)} className="bg-slate-900 text-xs text-slate-300 border border-slate-700 rounded-lg px-3 py-2 outline-none" aria-label="Select Sector Industry">
                 <option value="construction">🏗️ Construction Site</option>
                 <option value="education">🎓 Higher Education</option>
               </select>
 
-              {/* User Profile Badge */}
               <div className="flex items-center gap-3 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl text-xs">
                 <div>
-                  <p className="font-bold text-white leading-tight">{currentUser.name}</p>
+                  <p className="font-bold text-white">{currentUser.name}</p>
                   <p className="text-[10px] text-indigo-400 font-mono">{currentUser.id} ({currentUser.role.toUpperCase()})</p>
                 </div>
-                <button
-                  onClick={handleLogout}
-                  className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded text-[10px] font-semibold transition"
-                >
-                  Logout
-                </button>
+                <button onClick={handleLogout} className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded text-[10px] font-semibold" aria-label="Log Out">Logout</button>
               </div>
             </div>
           </header>
 
-          {/* Safety Breach Banner */}
-          {isViolation && (
-            <div className="bg-rose-900/80 border-b border-rose-500/50 px-6 py-3 flex items-center justify-between text-rose-200 text-xs font-medium animate-pulse">
-              <div className="flex items-center gap-2">
-                <span className="bg-rose-500 text-white font-bold px-2 py-0.5 rounded text-[10px] tracking-wider">ILO BREACH</span>
-                <span>Critical Fatigue Hazard: Continuous shift exceeds 4h or heat stress threshold. Mandatory 15-min rest break required immediately.</span>
+          {/* Accessibility: ARIA Live Region for Safety Violations */}
+          <div aria-live="assertive" role="alert">
+            {fatigueData.isViolation && (
+              <div className="bg-rose-900/80 border-b border-rose-500/50 px-6 py-3 flex items-center justify-between text-rose-200 text-xs font-medium animate-pulse">
+                <div className="flex items-center gap-2">
+                  <span className="bg-rose-500 text-white font-bold px-2 py-0.5 rounded text-[10px]">ILO BREACH</span>
+                  <span>Critical Fatigue Hazard: Continuous shift exceeds 4h or heat stress threshold. Mandatory 15-min rest break required immediately.</span>
+                </div>
+                <button onClick={() => setLastBreakSeconds(0)} className="bg-rose-500 hover:bg-rose-600 text-white px-3 py-1 rounded font-bold" aria-label="Log Rest Break">Log Mandatory Break</button>
               </div>
-              <button onClick={handleTakeBreak} className="bg-rose-500 hover:bg-rose-600 text-white px-3 py-1 rounded font-bold transition">
-                Log Mandatory Break
-              </button>
-            </div>
-          )}
+            )}
+          </div>
 
-          {/* Main Content Area */}
-          <main className="max-w-7xl mx-auto px-6 pt-8 space-y-8">
-
-            {/* WORKER VIEW */}
+          <main className="max-w-7xl mx-auto px-6 pt-8 space-y-8" role="main">
             {currentUser.role === 'worker' && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-                {/* Column 1: Shift Clock & Telemetry */}
-                <div className="space-y-6">
-                  <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-6 relative overflow-hidden">
-                    <div className="flex justify-between items-center mb-4">
-                      <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">Live Shift & Telemetry</h2>
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${shiftActive ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-slate-800 text-slate-400'}`}>
-                        {shiftActive ? 'SHIFT ACTIVE' : 'OFF DUTY'}
+                {/* Column 1: Shift & Telemetry */}
+                <section className="bg-slate-950/60 border border-slate-800 rounded-2xl p-6" aria-labelledby="telemetry-heading">
+                  <h2 id="telemetry-heading" className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Live Shift & Telemetry</h2>
+
+                  <div className="text-center py-6">
+                    <div className="text-5xl font-black font-mono text-white mb-2">{formatTime(shiftSeconds)}</div>
+                    <p className="text-xs text-slate-500">Continuous Work Time: {formatTime(lastBreakSeconds)}</p>
+                  </div>
+
+                  <div className="space-y-2 mb-6">
+                    <div className="flex justify-between text-xs font-medium">
+                      <span className="text-slate-400">Fatigue Risk Index</span>
+                      <span className={fatigueData.rawFatigue > 70 ? 'text-rose-400 font-bold' : fatigueData.rawFatigue > 40 ? 'text-amber-400' : 'text-emerald-400'}>
+                        {fatigueData.rawFatigue}% ({fatigueData.rawFatigue > 70 ? 'HIGH RISK' : fatigueData.rawFatigue > 40 ? 'MODERATE' : 'OPTIMAL'})
                       </span>
                     </div>
-
-                    <div className="text-center py-6">
-                      <div className="text-5xl font-black tracking-tight font-mono text-white mb-2">
-                        {formatTime(shiftSeconds)}
-                      </div>
-                      <p className="text-xs text-slate-500">Continuous Work Time: {formatTime(lastBreakSeconds)}</p>
-                    </div>
-
-                    <div className="space-y-2 mb-6">
-                      <div className="flex justify-between text-xs font-medium">
-                        <span className="text-slate-400">Fatigue Risk Index</span>
-                        <span className={rawFatigue > 70 ? 'text-rose-400 font-bold' : rawFatigue > 40 ? 'text-amber-400' : 'text-emerald-400'}>
-                          {rawFatigue}% ({rawFatigue > 70 ? 'HIGH RISK' : rawFatigue > 40 ? 'MODERATE' : 'OPTIMAL'})
-                        </span>
-                      </div>
-                      <div className="w-full h-3 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
-                        <div
-                          className={`h-full transition-all duration-500 ${rawFatigue > 70 ? 'bg-rose-500' : rawFatigue > 40 ? 'bg-amber-500' : 'bg-emerald-500'}`}
-                          style={{ width: `${rawFatigue}%` }}
-                        ></div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-2">
-                      {!shiftActive ? (
-                        <button onClick={handleStartShift} className="col-span-3 bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-bold text-sm transition">
-                          Start Duty Shift
-                        </button>
-                      ) : (
-                        <>
-                          <button onClick={handleTakeBreak} className="bg-amber-600 hover:bg-amber-500 text-white py-2.5 rounded-xl font-semibold text-xs transition">
-                            Record Break
-                          </button>
-                          <button onClick={handleEndShift} className="col-span-2 bg-rose-600 hover:bg-rose-500 text-white py-2.5 rounded-xl font-semibold text-xs transition">
-                            Clock Out Shift
-                          </button>
-                        </>
-                      )}
-                    </div>
-
-                    <div className="mt-6 pt-4 border-t border-slate-800 flex justify-between items-center text-xs">
-                      <span className="text-slate-400">Ambient Site Temperature:</span>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="range" min="20" max="45" value={siteTemp}
-                          onChange={(e) => setSiteTemp(Number(e.target.value))}
-                          className="w-24 accent-indigo-500"
-                        />
-                        <span className="font-mono text-white font-bold">{siteTemp}°C</span>
-                      </div>
+                    <div className="w-full h-3 bg-slate-900 rounded-full overflow-hidden border border-slate-800" role="progressbar" aria-valuenow={fatigueData.rawFatigue} aria-valuemin="0" aria-valuemax="100">
+                      <div className={`h-full transition-all duration-500 ${fatigueData.rawFatigue > 70 ? 'bg-rose-500' : fatigueData.rawFatigue > 40 ? 'bg-amber-500' : 'bg-emerald-500'}`} style={{ width: `${fatigueData.rawFatigue}%` }}></div>
                     </div>
                   </div>
-                </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    {!shiftActive ? (
+                      <button onClick={() => setShiftActive(true)} className="col-span-3 bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-bold text-sm" aria-label="Start Duty Shift">Start Duty Shift</button>
+                    ) : (
+                      <>
+                        <button onClick={() => setLastBreakSeconds(0)} className="bg-amber-600 hover:bg-amber-500 text-white py-2.5 rounded-xl font-semibold text-xs" aria-label="Record Break">Record Break</button>
+                        <button onClick={() => setShiftActive(false)} className="col-span-2 bg-rose-600 hover:bg-rose-500 text-white py-2.5 rounded-xl font-semibold text-xs" aria-label="Clock Out Shift">Clock Out Shift</button>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="mt-6 pt-4 border-t border-slate-800 flex justify-between items-center text-xs">
+                    <label htmlFor="temp-range" className="text-slate-400">Ambient Site Temperature:</label>
+                    <div className="flex items-center gap-2">
+                      <input id="temp-range" type="range" min="20" max="45" value={siteTemp} onChange={(e) => setSiteTemp(Number(e.target.value))} className="w-24 accent-indigo-500" />
+                      <span className="font-mono text-white font-bold">{siteTemp}°C</span>
+                    </div>
+                  </div>
+                </section>
 
                 {/* Column 2: Transparent Wage Engine */}
-                <div className="space-y-6">
-                  <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-6" id="printable-payslip">
-                    <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Transparent Wage Engine</h2>
+                <section className="bg-slate-950/60 border border-slate-800 rounded-2xl p-6" id="printable-payslip" aria-labelledby="wage-heading">
+                  <h2 id="wage-heading" className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Transparent Wage Engine</h2>
 
-                    <div className="space-y-4 text-xs">
-                      <div>
-                        <label className="text-slate-400 block mb-1">Base Rate (₹ / hr)</label>
-                        <input
-                          type="number" value={baseRate} onChange={(e) => setBaseRate(Number(e.target.value))}
-                          className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-white font-mono outline-none focus:border-indigo-500"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-slate-400 block mb-1">Regular Hours</label>
-                          <input
-                            type="number" value={hoursWorked} onChange={(e) => setHoursWorked(Number(e.target.value))}
-                            className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-white font-mono outline-none focus:border-indigo-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-slate-400 block mb-1">Overtime (1.5x)</label>
-                          <input
-                            type="number" value={overtimeHours} onChange={(e) => setOvertimeHours(Number(e.target.value))}
-                            className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-white font-mono outline-none focus:border-indigo-500"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 pt-1">
-                        <input
-                          type="checkbox" id="night" checked={nightShift} onChange={(e) => setNightShift(e.target.checked)}
-                          className="accent-indigo-500 rounded"
-                        />
-                        <label htmlFor="night" className="text-slate-300">Include Night Shift Hardship Allowance (+₹250)</label>
-                      </div>
-
-                      <div className="bg-slate-900/80 p-4 rounded-xl space-y-2 border border-slate-800 font-mono mt-4">
-                        <div className="flex justify-between text-slate-400">
-                          <span>Base Pay ({hoursWorked}h × ₹{baseRate}):</span>
-                          <span>₹{regularPay}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-400">
-                          <span>Overtime ({overtimeHours}h × ₹{otRate}):</span>
-                          <span>₹{otPay}</span>
-                        </div>
-                        {nightShift && (
-                          <div className="flex justify-between text-emerald-400">
-                            <span>Night Shift Allowance:</span>
-                            <span>+₹250</span>
-                          </div>
-                        )}
-                        <div className="flex justify-between text-slate-500 text-[11px]">
-                          <span>Statutory Safety Fund (5%):</span>
-                          <span>-₹{statutoryDeductions}</span>
-                        </div>
-                        <div className="border-t border-slate-800 pt-2 flex justify-between font-bold text-sm text-white">
-                          <span>Net Statutory Pay:</span>
-                          <span className="text-emerald-400">₹{netPay}</span>
-                        </div>
-                      </div>
-
-                      <button onClick={() => window.print()} className="w-full border border-slate-700 hover:bg-slate-800 text-slate-200 py-2.5 rounded-xl font-semibold transition">
-                        📄 Export Cryptographic Payslip (PDF)
-                      </button>
+                  <div className="space-y-4 text-xs">
+                    <div>
+                      <label htmlFor="base-rate" className="text-slate-400 block mb-1">Base Rate (₹ / hr)</label>
+                      <input id="base-rate" type="number" value={baseRate} onChange={(e) => setBaseRate(Number(e.target.value))} className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-white font-mono outline-none focus:border-indigo-500" />
                     </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label htmlFor="regular-hours" className="text-slate-400 block mb-1">Regular Hours</label>
+                        <input id="regular-hours" type="number" value={hoursWorked} onChange={(e) => setHoursWorked(Number(e.target.value))} className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-white font-mono outline-none focus:border-indigo-500" />
+                      </div>
+                      <div>
+                        <label htmlFor="overtime-hours" className="text-slate-400 block mb-1">Overtime (1.5x)</label>
+                        <input id="overtime-hours" type="number" value={overtimeHours} onChange={(e) => setOvertimeHours(Number(e.target.value))} className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-white font-mono outline-none focus:border-indigo-500" />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <input type="checkbox" id="night" checked={nightShift} onChange={(e) => setNightShift(e.target.checked)} className="accent-indigo-500 rounded" />
+                      <label htmlFor="night" className="text-slate-300">Include Night Shift Hardship Allowance (+₹250)</label>
+                    </div>
+
+                    <div className="bg-slate-900/80 p-4 rounded-xl space-y-2 border border-slate-800 font-mono mt-4">
+                      <div className="flex justify-between text-slate-400"><span>Base Pay ({hoursWorked}h × ₹{baseRate}):</span><span>₹{payrollData.regularPay}</span></div>
+                      <div className="flex justify-between text-slate-400"><span>Overtime ({overtimeHours}h × ₹{payrollData.otRate}):</span><span>₹{payrollData.otPay}</span></div>
+                      {nightShift && <div className="flex justify-between text-emerald-400"><span>Night Shift Allowance:</span><span>+₹250</span></div>}
+                      <div className="flex justify-between text-slate-500 text-[11px]"><span>Statutory Safety Fund (5%):</span><span>-₹{payrollData.statutoryDeductions}</span></div>
+                      <div className="border-t border-slate-800 pt-2 flex justify-between font-bold text-sm text-white"><span>Net Statutory Pay:</span><span className="text-emerald-400">₹{payrollData.netPay}</span></div>
+                    </div>
+
+                    <button onClick={() => window.print()} className="w-full border border-slate-700 hover:bg-slate-800 text-slate-200 py-2.5 rounded-xl font-semibold transition" aria-label="Export Payslip to PDF">📄 Export Cryptographic Payslip (PDF)</button>
                   </div>
-                </div>
+                </section>
 
                 {/* Column 3: Cryptographic Anonymous Grievance Vault */}
-                <div className="space-y-6">
-                  <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-6">
-                    <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Anonymous Grievance Vault</h2>
+                <section className="bg-slate-950/60 border border-slate-800 rounded-2xl p-6" aria-labelledby="grievance-heading">
+                  <h2 id="grievance-heading" className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Anonymous Grievance Vault</h2>
 
-                    <form onSubmit={handleGrievanceSubmit} className="space-y-4">
-                      <div>
-                        <label className="text-xs text-slate-400 block mb-1">Incident Category</label>
-                        <select
-                          value={grievanceCategory} onChange={(e) => setGrievanceCategory(e.target.value)}
-                          className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs text-white outline-none focus:border-indigo-500"
-                        >
-                          <option value="Safety Breach">Safety / Fatigue Violation</option>
-                          <option value="Wage Audit">Unpaid Overtime / Deduction</option>
-                          <option value="Harassment">Workplace Harassment</option>
-                        </select>
-                      </div>
+                  <form onSubmit={handleGrievanceSubmit} className="space-y-4" aria-label="Submit Anonymous Grievance">
+                    <div>
+                      <label htmlFor="grievance-cat" className="text-xs text-slate-400 block mb-1">Incident Category</label>
+                      <select id="grievance-cat" value={grievanceCategory} onChange={(e) => setGrievanceCategory(e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs text-white outline-none focus:border-indigo-500">
+                        <option value="Safety Breach">Safety / Fatigue Violation</option>
+                        <option value="Wage Audit">Unpaid Overtime / Deduction</option>
+                        <option value="Harassment">Workplace Harassment</option>
+                      </select>
+                    </div>
 
-                      <div>
-                        <label className="text-xs text-slate-400 block mb-1">Encrypted Incident Report</label>
-                        <textarea
-                          rows="3" value={grievanceText} onChange={(e) => setGrievanceText(e.target.value)}
-                          placeholder="Describe the violation. All metadata and IP credentials are stripped client-side via SHA-256."
-                          className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs text-white outline-none focus:border-indigo-500"
-                        ></textarea>
-                      </div>
+                    <div>
+                      <label htmlFor="grievance-text" className="text-xs text-slate-400 block mb-1">Encrypted Incident Report</label>
+                      <textarea id="grievance-text" rows="3" value={grievanceText} onChange={(e) => setGrievanceText(e.target.value)} placeholder="Describe the violation. All metadata and IP credentials are stripped client-side via SHA-256." className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs text-white outline-none focus:border-indigo-500"></textarea>
+                    </div>
 
-                      <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2.5 rounded-xl font-bold text-xs transition">
-                        🔐 Encrypt & Submit Anonymously
-                      </button>
+                    <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2.5 rounded-xl font-bold text-xs transition" aria-label="Encrypt and Submit Grievance">🔐 Encrypt & Submit Anonymously</button>
+                  </form>
+
+                  {lastSubmittedId && (
+                    <div className="mt-4 p-3 bg-emerald-950/50 border border-emerald-500/40 rounded-xl text-xs space-y-1">
+                      <p className="text-emerald-400 font-bold">Grievance Cryptographically Anchored!</p>
+                      <p className="text-slate-300">Your Token: <span className="font-mono text-white select-all font-bold">{lastSubmittedId}</span></p>
+                    </div>
+                  )}
+
+                  <div className="mt-6 pt-4 border-t border-slate-800">
+                    <h3 className="text-xs font-semibold text-slate-400 mb-2">Track Report Status</h3>
+                    <form onSubmit={handleSearchToken} className="flex gap-2" aria-label="Track Grievance Token">
+                      <input type="text" placeholder="Paste Token (FS-2026-XXXX)" value={searchToken} onChange={(e) => setSearchToken(e.target.value)} className="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs font-mono text-white outline-none focus:border-indigo-500" />
+                      <button type="submit" className="bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold" aria-label="Search Token">Search</button>
                     </form>
 
-                    {lastSubmittedId && (
-                      <div className="mt-4 p-3 bg-emerald-950/50 border border-emerald-500/40 rounded-xl text-xs space-y-1">
-                        <p className="text-emerald-400 font-bold">Grievance Cryptographically Anchored!</p>
-                        <p className="text-slate-300">Your Anonymous Token: <span className="font-mono text-white select-all font-bold">{lastSubmittedId}</span></p>
+                    {searchResult && (
+                      <div className="mt-3 p-3 bg-slate-900 rounded-xl border border-slate-800 text-xs">
+                        {searchResult === "NOT_FOUND" ? (
+                          <p className="text-rose-400">Token not found in audit ledger.</p>
+                        ) : (
+                          <div className="space-y-1">
+                            <p className="font-bold text-white">{searchResult.category} ({searchResult.id})</p>
+                            <p className="text-slate-400 text-[11px]">{searchResult.message}</p>
+                            <p className="text-emerald-400 font-medium">Status: {searchResult.status}</p>
+                          </div>
+                        )}
                       </div>
                     )}
-
-                    <div className="mt-6 pt-4 border-t border-slate-800">
-                      <h3 className="text-xs font-semibold text-slate-400 mb-2">Track Report Status</h3>
-                      <form onSubmit={handleSearchToken} className="flex gap-2">
-                        <input
-                          type="text" placeholder="Paste Token (FS-2026-XXXX)" value={searchToken} onChange={(e) => setSearchToken(e.target.value)}
-                          className="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs font-mono text-white outline-none focus:border-indigo-500"
-                        />
-                        <button type="submit" className="bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold">Search</button>
-                      </form>
-
-                      {searchResult && (
-                        <div className="mt-3 p-3 bg-slate-900 rounded-xl border border-slate-800 text-xs">
-                          {searchResult === "NOT_FOUND" ? (
-                            <p className="text-rose-400">Token not found in audit ledger.</p>
-                          ) : (
-                            <div className="space-y-1">
-                              <p className="font-bold text-white">{searchResult.category} ({searchResult.id})</p>
-                              <p className="text-slate-400 text-[11px]">{searchResult.message}</p>
-                              <p className="text-emerald-400 font-medium">Status: {searchResult.status}</p>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
                   </div>
-                </div>
+                </section>
 
               </div>
             )}
 
-            {/* EMPLOYER / MANAGER DASHBOARD */}
             {currentUser.role === 'admin' && (
               <div className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -594,7 +421,7 @@
                   </div>
                   <div className="bg-slate-950/60 border border-slate-800 p-5 rounded-2xl">
                     <p className="text-xs text-slate-400 font-medium">Average Fatigue Index</p>
-                    <p className={`text-3xl font-black mt-2 ${rawFatigue > 60 ? 'text-rose-400' : 'text-emerald-400'}`}>{rawFatigue}%</p>
+                    <p className={`text-3xl font-black mt-2 ${fatigueData.rawFatigue > 60 ? 'text-rose-400' : 'text-emerald-400'}`}>{fatigueData.rawFatigue}%</p>
                     <p className="text-[10px] text-slate-500 mt-1">Live telemetry sync</p>
                   </div>
                   <div className="bg-slate-950/60 border border-slate-800 p-5 rounded-2xl">
@@ -609,11 +436,11 @@
                   </div>
                 </div>
 
-                <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-6">
-                  <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Ethical Compliance & Grievance Board</h2>
+                <section className="bg-slate-950/60 border border-slate-800 rounded-2xl p-6" aria-labelledby="compliance-board-heading">
+                  <h2 id="compliance-board-heading" className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Ethical Compliance & Grievance Board</h2>
 
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs text-slate-300">
+                    <table className="w-full text-left text-xs text-slate-300" aria-label="Grievances Summary Table">
                       <thead className="bg-slate-900 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
                         <tr>
                           <th className="p-3">Token ID</th>
@@ -640,38 +467,23 @@
                       </tbody>
                     </table>
                   </div>
-                </div>
+                </section>
               </div>
             )}
 
           </main>
 
           {/* Floating Judge Demo Bar */}
-          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-950/90 border border-slate-700/80 backdrop-blur-md px-5 py-3 rounded-2xl shadow-2xl z-50 flex items-center gap-4 text-xs">
+          <aside className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-950/90 border border-slate-700/80 backdrop-blur-md px-5 py-3 rounded-2xl shadow-2xl z-50 flex items-center gap-4 text-xs" aria-label="Judge Quick Scenarios">
             <span className="font-bold text-indigo-400 tracking-wider uppercase text-[10px] flex items-center gap-1">
               <span>⚡</span> Judge Quick Scenarios:
             </span>
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => loadScenario('HEAT_CRISIS')}
-                className="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 px-3 py-1 rounded-lg transition font-medium"
-              >
-                1. Heat & Fatigue Hazard
-              </button>
-              <button
-                onClick={() => loadScenario('WAGE_AUDIT')}
-                className="bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/40 px-3 py-1 rounded-lg transition font-medium"
-              >
-                2. Night Shift Wage Audit
-              </button>
-              <button
-                onClick={() => loadScenario('CLEAN')}
-                className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1 rounded-lg transition font-medium"
-              >
-                Reset App
-              </button>
+              <button onClick={() => loadScenario('HEAT_CRISIS')} className="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 px-3 py-1 rounded-lg transition font-medium" aria-label="Trigger Heat Crisis Scenario">1. Heat & Fatigue Hazard</button>
+              <button onClick={() => loadScenario('WAGE_AUDIT')} className="bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/40 px-3 py-1 rounded-lg transition font-medium" aria-label="Trigger Wage Audit Scenario">2. Night Shift Wage Audit</button>
+              <button onClick={() => loadScenario('CLEAN')} className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1 rounded-lg transition font-medium" aria-label="Reset App State">Reset App</button>
             </div>
-          </div>
+          </aside>
 
         </div>
       );

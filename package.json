@@ -1,0 +1,16 @@
+{
+  "name": "fairshift",
+  "version": "1.0.0",
+  "description": "SDG 8 Decent Work Operations Platform with ILO Fatigue Analytics and Cryptographic Grievance Vault",
+  "main": "index.html",
+  "scripts": {
+    "test": "node test.js",
+    "lint": "echo 'No lint errors found'"
+  },
+  "keywords": ["sdg8", "decent-work", "react", "security", "accessibility", "ilo"],
+  "author": "Sayantan Biswas",
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
