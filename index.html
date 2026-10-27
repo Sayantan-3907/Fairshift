@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="referrer" content="no-referrer"/>
+<title>FairShift · Fatigue, Wages & Grievance Vault</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.js"></script>
+<style>
+:root{--bg:#0B0F17;--well:#0F172A;--card:#1E293B;--line:#334155;--tx:#F8FAFC;--tx2:#94A3B8;--em:#10B981;--em2:#059669;--am:#F59E0B;--am2:#D97706;--rd:#DC2626}
+html,body{background:var(--bg);color:var(--tx);font-family:Inter,system-ui,sans-serif}
+body{background-image:linear-gradient(rgba(30,41,59,.15) 1px,transparent 1px),linear-gradient(90deg,rgba(30,41,59,.15) 1px,transparent 1px);background-size:16px 16px;min-height:100dvh}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.ph{background:var(--well);border-bottom:1px solid var(--line);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.s-em{border-left:3px solid var(--em)}.s-am{border-left:3px solid var(--am)}.s-rd{border-left:3px solid var(--rd)}
+.btn{min-height:48px;padding:0 16px;border-radius:4px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:var(--card);color:var(--tx);transition:background .15s,border-color .15s;cursor:pointer}
+.btn:hover:not(:disabled){border-color:#64748B;background:#243347}.btn:active:not(:disabled){transform:translateY(1px)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-p{background:var(--em);color:var(--bg);border-color:var(--em)}.btn-p:hover:not(:disabled){background:var(--em2);border-color:var(--em2)}
+.btn-d{background:var(--rd);color:#fff;border-color:var(--rd)}.btn-d:hover:not(:disabled){background:#B91C1C;border-color:#B91C1C}
+.inp{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:12px;color:var(--tx);min-height:44px}
+.inp:focus,.btn:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--em);outline-offset:1px;border-color:var(--em)}
+.chip{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;padding:2px 8px;border-radius:2px;border:1px solid;text-transform:uppercase;display:inline-block}
+.c-em{background:rgba(16,185,129,.15);border-color:var(--em);color:#34D399}.c-am{background:rgba(245,158,11,.15);border-color:var(--am);color:#FBBF24}.c-rd{background:rgba(220,38,38,.15);border-color:#EF4444;color:#FCA5A5}.c-sl{background:rgba(148,163,184,.12);border-color:#64748B;color:var(--tx2)}
+.lbl{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--tx2);text-transform:uppercase}
+.scan{position:absolute;left:0;right:0;height:2px;background:var(--em);animation:sc 1.4s linear infinite}
+@keyframes sc{from{top:4%}to{top:94%}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef,useMemo}=React;
+/* ---------- Security helpers ---------- */
+const clean=s=>DOMPurify.sanitize(String(s??''),{ALLOWED_TAGS:[],ALLOWED_ATTR:[]}).replace(/\s+/g,' ').trim();
+const enc=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o)))).split('').reverse().join('');
+const dec=s=>JSON.parse(decodeURIComponent(escape(atob(s.split('').reverse().join('')))));
+const rnd=n=>[...crypto.getRandomValues(new Uint8Array(n))].map(x=>x.toString(16).padStart(2,'0')).join('');
+async function sha256(t){
+  if(window.crypto&&crypto.subtle){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+  let h='';for(let i=0;i<8;i++)h+=(([...t].reduce((a,c)=>Math.imul(a^c.charCodeAt(0),16777619)+i,2166136261))>>>0).toString(16).padStart(8,'0');return h.repeat(1).padEnd(64,'0')}
+const EMP_PIN='2026', SESSION_MS=30*60*1000, KEY='fs.v1';
+/* ---------- Demo data ---------- */
+const IND={
+ construction:{name:'Construction Site',site:'Sector 4 · Heavy Ops',icon:'hard-hat',rate:185,geo:'19.0760° N, 72.8777° E',
+  hist:[{d:'Mon',h:9.1,n:true},{d:'Tue',h:8.4,n:true}],
+  checks:['Hard hat & boots worn','Harness inspected','Scaffold tag is green','Water break logged'],
+  allow:[['hazard',1200],['travel',600]],
+  crew:[{n:'Ravi K.',r:'Mason',h:7.2,nt:0},{n:'Meena S.',r:'Crane signaller',h:8.6,nt:2},{n:'Arun P.',r:'Electrician',h:5.1,nt:0},{n:'Suresh D.',r:'Scaffolder',h:9.4,nt:3}]},
+ education:{name:'Educational Institution',site:'Anna Block · Labs & Halls',icon:'graduation-cap',rate:240,geo:'13.0827° N, 80.2707° E',
+  hist:[{d:'Mon',h:6.5,n:false},{d:'Tue',h:8.8,n:true}],
+  checks:['Lecture plan filed','Lab supervision roster signed','Invigilation slot confirmed','Break slot logged'],
+  allow:[['lab',900],['travel',500]],
+  crew:[{n:'Dr. Lakshmi',r:'Lecturer',h:6.8,nt:0},{n:'Prof. Imran',r:'Lab supervisor',h:7.9,nt:1},{n:'Kavya R.',r:'Invigilator',h:8.9,nt:2},{n:'Nisha T.',r:'Invigilator',h:5.5,nt:0}]}};
+const CYC0={construction:{reg:40,ot:4},education:{reg:36,ot:2}};
+const SEEDG=[['Unsafe scaffold on level 3 had no toe-boards.','Safety','Critical','Open'],['Overtime hours last week were not paid at the higher rate.','Wages','High','In review'],['Invigilation roster gives me 4 sessions in a row.','Workload','Medium','Open']];
+const risk=(h,nt)=>Math.min(100,Math.round(h/8*100)+(nt>=2?15:0));
+const hms=ms=>{const s=Math.floor(ms/1000);return [Math.floor(s/3600),Math.floor(s%3600/60),s%60].map(x=>String(x).padStart(2,'0')).join(':')};
+const inr=n=>'₹'+Math.round(n).toLocaleString('en-IN');
+/* ---------- i18n for payslip ---------- */
+const L={
+ en:{t:'Wage breakdown',base:'Base pay',ot:'Overtime (1.5×)',al:'Allowances',de:'Deductions',gross:'Gross pay',net:'Take-home pay',hazard:'Hazard allowance',lab:'Lab duty allowance',travel:'Travel allowance',pf:'Provident fund (12%)',esi:'Health insurance (0.75%)',pt:'Professional tax',hrs:'hours',speech:'Take-home pay',sp:'en-IN'},
+ hi:{t:'वेतन विवरण',base:'बुनियादी वेतन',ot:'ओवरटाइम (1.5×)',al:'भत्ते',de:'कटौती',gross:'कुल वेतन',net:'हाथ में वेतन',hazard:'जोखिम भत्ता',lab:'प्रयोगशाला भत्ता',travel:'यात्रा भत्ता',pf:'भविष्य निधि (12%)',esi:'स्वास्थ्य बीमा (0.75%)',pt:'व्यावसायिक कर',hrs:'घंटे',speech:'आपका हाथ में वेतन',sp:'hi-IN'},
+ ta:{t:'ஊதிய விவரம்',base:'அடிப்படை ஊதியம்',ot:'கூடுதல் நேரம் (1.5×)',al:'படிகள்',de:'பிடித்தங்கள்',gross:'மொத்த ஊதியம்',net:'கைக்கு வரும் ஊதியம்',hazard:'ஆபத்துப் படி',lab:'ஆய்வகப் படி',travel:'பயணப் படி',pf:'வருங்கால வைப்பு நிதி (12%)',esi:'மருத்துவக் காப்பீடு (0.75%)',pt:'தொழில் வரி',hrs:'மணி',speech:'உங்கள் கைக்கு வரும் ஊதியம்',sp:'ta-IN'}};
+const Icon=({n,s=16,c=''})=>{const k=n.split('-').map(x=>x[0].toUpperCase()+x.slice(1)).join('');const ic=window.lucide&&lucide.icons&&lucide.icons[k];
+ if(!ic)return <span style={{display:'inline-block',width:s,height:s}}/>;
+ return <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={c} aria-hidden="true">{ic.map(([t,a],i)=>React.createElement(t,{key:i,...a}))}</svg>};
+const Panel=({title,icon,tone='em',right,children})=>(<section className={`panel s-${tone}`}><div className="ph"><span className="flex items-center gap-2"><Icon n={icon} s={16}/>{title}</span>{right}</div><div className="p-4">{children}</div></section>);
+
+/* ---------- App ---------- */
+function App(){
+ const [S,setS]=useState(()=>{try{return dec(localStorage.getItem(KEY))}catch(e){return {industry:'construction',lang:'en',speed:1,checkIn:null,hist:{construction:IND.construction.hist,education:IND.education.hist},cyc:CYC0,g:[],seeded:false}}});
+ const [sess,setSess]=useState(null); // in-memory only
+ const up=f=>setS(p=>({...p,...f}));
+ useEffect(()=>{try{localStorage.setItem(KEY,enc(S))}catch(e){}},[S]);
+ useEffect(()=>{ if(S.seeded)return; (async()=>{const g=[];for(const [t,c,sv,st] of SEEDG){g.push({tok:await sha256(t+rnd(16)),cat:c,sev:sv,text:t,status:st,ts:Math.floor(Date.now()/36e5)*36e5-g.length*864e5})}setS(p=>({...p,g,seeded:true}))})()},[S.seeded]);
+ useEffect(()=>{const id=setInterval(()=>{
+   setS(p=>p.checkIn?{...p,checkIn:{...p.checkIn,el:p.checkIn.el+1000*p.speed}}:p);
+   setSess(s=>s&&s.exp<=Date.now()?null:s)},1000);return()=>clearInterval(id)},[]);
+ const login=(role,pin)=>{ if(role==='employer'&&pin!==EMP_PIN)return false; setSess({role,token:rnd(16),exp:Date.now()+SESSION_MS}); return true};
+ const can=r=>sess&&sess.role===r&&sess.exp>Date.now();
+ if(!sess)return <Login login={login}/>;
+ const ind=IND[S.industry];
+ return(<div className="max-w-5xl mx-auto p-3 md:p-6 space-y-4">
+  <header className="panel"><div className="p-3 flex flex-wrap items-center gap-3 justify-between">
+   <div className="flex items-center gap-2"><Icon n="shield-check" s={22} c="text-emerald-400"/><div><div className="font-bold text-lg leading-5">FairShift</div><div className="text-xs" style={{color:'var(--tx2)'}}>SDG 8 · Decent Work & Economic Growth</div></div></div>
+   <div className="flex flex-wrap items-center gap-2">
+    <div role="group" aria-label="Industry mode" className="flex p-1 rounded" style={{background:'var(--well)'}}>
+     {Object.entries(IND).map(([k,v])=><button key={k} aria-pressed={S.industry===k} onClick={()=>up({industry:k})} className="px-3 py-2 rounded text-sm font-semibold flex items-center gap-1" style={S.industry===k?{background:'var(--em)',color:'var(--bg)'}:{color:'var(--tx2)'}}><Icon n={v.icon} s={15}/>{k==='construction'?'Construction':'College'}</button>)}
+    </div>
+    <span className="chip c-sl mono" title="In-memory session token">{sess.role} · {sess.token.slice(0,8)} · {Math.max(0,Math.round((sess.exp-Date.now())/60000))}m</span>
+    <button className="btn" style={{minHeight:40}} onClick={()=>setSess(null)}><Icon n="log-out" s={16}/>Sign out</button>
+   </div></div></header>
+  {can('worker')&&<Worker S={S} up={up} ind={ind}/>}
+  {can('employer')&&<Employer S={S} up={up} ind={ind}/>}
+  <footer className="text-xs text-center pb-6" style={{color:'var(--tx2)'}}>Demo data only · State is obfuscated (base64) in this browser · No cookies, no IP or device identifiers stored</footer>
+ </div>)}
+
+function Login({login}){
+ const [pin,setPin]=useState(''),[err,setErr]=useState('');
+ return(<main className="min-h-screen grid place-items-center p-4"><div className="panel s-em w-full max-w-md">
+  <div className="ph"><span className="flex items-center gap-2"><Icon n="lock" s={16}/>Secure sign-in</span><span className="chip c-em">Session: memory only</span></div>
+  <div className="p-5 space-y-4">
+   <div><h1 className="text-2xl font-bold">FairShift</h1><p className="text-sm mt-1" style={{color:'var(--tx2)'}}>Safe hours, transparent pay and anonymous reporting for every worker.</p></div>
+   <button className="btn btn-p w-full" onClick={()=>login('worker')}><Icon n="hard-hat" s={18}/>Enter as Worker</button>
+   <div className="space-y-2 pt-3" style={{borderTop:'1px solid var(--line)'}}>
+    <label htmlFor="pin" className="lbl">Employer / Admin PIN <span className="mono normal-case">(demo: 2026)</span></label>
+    <input id="pin" className="inp mono" type="password" inputMode="numeric" maxLength={8} value={pin} onChange={e=>{setPin(clean(e.target.value));setErr('')}} onKeyDown={e=>e.key==='Enter'&&(login('employer',pin)||setErr('Invalid PIN'))}/>
+    {err&&<p role="alert" className="text-sm" style={{color:'#FCA5A5'}}>{err}</p>}
+    <button className="btn w-full" onClick={()=>login('employer',pin)||setErr('Invalid PIN')}><Icon n="users" s={18}/>Enter Employer Dashboard</button>
+   </div></div></div></main>)}
+
+function fatigue(S,ind){
+ const h=S.checkIn?S.checkIn.el/36e5:0, hist=S.hist[S.industry];
+ const b2b=!!S.checkIn&&S.checkIn.night&&hist.slice(-2).length===2&&hist.slice(-2).every(x=>x.n);
+ const lvl=h>=8?'lock':(h>=6.8||b2b)?'warn':'ok';
+ return {h,b2b,lvl,pct:Math.min(100,h/8*100)}}
+
+function Worker({S,up,ind}){
+ const [tab,setTab]=useState('shift');
+ return(<>
+  <nav className="flex gap-2" role="tablist">{[['shift','timer','Shift & Fatigue'],['pay','wallet','Payslip'],['gr','megaphone','Grievance Vault']].map(([k,i,t])=>
+   <button key={k} role="tab" aria-selected={tab===k} className="btn flex-1" style={tab===k?{borderColor:'var(--em)',color:'#34D399'}:{}} onClick={()=>setTab(k)}><Icon n={i} s={18}/><span className="hidden sm:inline">{t}</span><span className="sm:hidden">{t.split(' ')[0]}</span></button>)}</nav>
+  {tab==='shift'&&<Shift S={S} up={up} ind={ind}/>}
+  {tab==='pay'&&<Pay S={S} up={up} ind={ind}/>}
+  {tab==='gr'&&<Vault S={S} up={up} worker/>}
+ </>)}
+
+function Shift({S,up,ind}){
+ const [chk,setChk]=useState({}),[scan,setScan]=useState(null),[night,setNight]=useState(false);
+ const f=fatigue(S,ind),ready=ind.checks.every((_,i)=>chk[i]);
+ const tone=f.lvl==='lock'?'rd':f.lvl==='warn'?'am':'em';
+ const checkIn=(mode)=>{setScan(mode);setTimeout(()=>{const d=Math.round(12+Math.random()*83);setScan({done:true,mode,d});
+   setTimeout(()=>{up({checkIn:{el:0,mode,night,at:Date.now(),d}});setScan(null);setChk({})},900)},mode==='QR'?2200:700)};
+ const out=()=>{const h=S.checkIn.el/36e5;const hist=[...S.hist[S.industry].slice(-4),{d:'Today',h:+h.toFixed(1),n:S.checkIn.night}];
+   const c=S.cyc[S.industry];up({checkIn:null,hist:{...S.hist,[S.industry]:hist},cyc:{...S.cyc,[S.industry]:{reg:c.reg+Math.min(h,8),ot:c.ot+Math.max(0,h-8)}}})};
+ const ot=Math.max(0,f.h-8);
+ const metrics=S.industry==='construction'
+  ?[['Heat index',`${(31+Math.min(6,f.h*.5)).toFixed(0)}°C`,f.h>5?'am':'em'],['Weather exposure',`${(3.2+f.h).toFixed(1)} h`,3.2+f.h>8?'am':'em'],['Open site hazards','2 logged','am']]
+  :[['Lecture hours (wk)',`${(14+f.h*.5).toFixed(1)} / 18`,'em'],['Lab supervision',`${(6+f.h*.3).toFixed(1)} h`,'em'],['Invigilation sessions','7 / 6 max','rd']];
+ return(<div className="grid md:grid-cols-2 gap-4">
+  <Panel title="Check-in · Geofence" icon="qr-code" right={<span className={`chip ${S.checkIn?'c-em':'c-sl'}`}>{S.checkIn?'On shift':'Off shift'}</span>}>
+   <div className="rounded p-3 mono text-xs mb-3" style={{background:'var(--bg)',border:'1px solid var(--line)'}}>{ind.site}<br/>{ind.geo} · fence radius 150 m</div>
+   {!S.checkIn&&<>
+    <fieldset className="space-y-2 mb-3"><legend className="lbl mb-1">Pre-shift rules</legend>
+     {ind.checks.map((c,i)=><label key={i} className="flex items-center gap-3 min-h-[44px] cursor-pointer"><input type="checkbox" className="w-5 h-5" style={{accentColor:'#10B981'}} checked={!!chk[i]} onChange={e=>setChk({...chk,[i]:e.target.checked})}/>{c}</label>)}</fieldset>
+    <label className="flex items-center gap-3 mb-3 min-h-[44px]"><span className="lbl">Shift type</span><select className="inp" style={{width:'auto'}} value={night?'n':'d'} onChange={e=>setNight(e.target.value==='n')}><option value="d">Day shift</option><option value="n">Night shift</option></select></label>
+    {scan?<div className="relative h-36 rounded grid place-items-center text-center overflow-hidden" style={{background:'var(--bg)',border:'1px dashed var(--em)'}} role="status">
+      {!scan.done&&scan==='QR'&&<div className="scan"/>}
+      <div className="mono text-sm">{scan.done?<span style={{color:'#34D399'}}>✔ Inside geofence · {scan.d} m from gate</span>:scan==='QR'?'Scanning gate QR…':'Reading NFC tag…'}</div></div>
+    :<div className="grid grid-cols-2 gap-2"><button className="btn btn-p" disabled={!ready} onClick={()=>checkIn('QR')}><Icon n="qr-code" s={18}/>Scan QR</button><button className="btn btn-p" disabled={!ready} onClick={()=>checkIn('NFC')}><Icon n="radio" s={18}/>Tap NFC</button></div>}
+    {!ready&&<p className="text-xs mt-2" style={{color:'var(--tx2)'}}>Complete every rule above to unlock check-in.</p>}</>}
+   {S.checkIn&&<><div className="text-center rounded p-4" style={{background:'var(--bg)'}}><div className="lbl">Time on shift</div><div className="mono text-4xl font-semibold my-1" style={{color:f.lvl==='lock'?'#FCA5A5':f.lvl==='warn'?'#FBBF24':'#34D399'}} aria-live="off">{hms(S.checkIn.el)}</div>
+     <div className="mono text-xs" style={{color:'var(--tx2)'}}>{S.checkIn.mode} · {S.checkIn.night?'Night':'Day'} · overtime {ot.toFixed(2)} h</div></div>
+     <button className={`btn w-full mt-3 ${f.lvl==='lock'?'btn-d':'btn-p'}`} onClick={out}><Icon n="log-out" s={18}/>Check out</button></>}
+   <div className="flex items-center gap-2 mt-3 text-xs" style={{color:'var(--tx2)'}}><span className="lbl">Demo clock</span>{[1,600,3600].map(x=><button key={x} className="btn mono" style={{minHeight:32,padding:'0 10px',fontSize:12,borderColor:S.speed===x?'var(--em)':''}} onClick={()=>up({speed:x})}>{x}×</button>)}</div>
+  </Panel>
+  <div className="space-y-4">
+   <Panel title="Fatigue risk engine" icon="activity" tone={tone} right={<span className={`chip ${tone==='rd'?'c-rd':tone==='am'?'c-am':'c-em'}`}>{f.lvl==='lock'?'Lockout':f.lvl==='warn'?'Warning':'Safe'}</span>}>
+    {f.lvl==='lock'&&<div role="alert" className="p-3 rounded mb-3 flex gap-2" style={{background:'rgba(220,38,38,.15)',border:'1px solid #EF4444'}}><Icon n="lock" s={20}/><div><b>Mandatory rest lockout.</b> You passed 8 hours. Stop hazardous tasks and check out; overtime is paid at 1.5×.</div></div>}
+    {f.lvl==='warn'&&<div role="alert" className="p-3 rounded mb-3 flex gap-2" style={{background:'rgba(245,158,11,.15)',border:'1px solid var(--am)'}}><Icon n="alert-triangle" s={20}/><div>{f.b2b?<><b>Back-to-back night shifts detected.</b> Your last two shifts were nights. Ask for a rest day.</>:<><b>Approaching 8-hour limit.</b> Take a break now.</>}</div></div>}
+    <div className="flex justify-between mono text-sm mb-1"><span>{f.h.toFixed(2)} h</span><span style={{color:'var(--tx2)'}}>8.0 h limit</span></div>
+    <div className="grid grid-cols-8 gap-1 p-1 rounded" style={{background:'var(--bg)'}} role="progressbar" aria-valuenow={Math.round(f.pct)} aria-valuemin="0" aria-valuemax="100">{Array.from({length:8},(_,i)=>{const on=f.h>i;return <div key={i} className="h-3 rounded-sm" style={{background:!on?'#1E293B':f.lvl==='lock'?'#DC2626':i>=6?'#F59E0B':'#10B981'}}/>})}</div>
+    <div className="mt-3 text-xs lbl">Recent shifts</div>
+    <div className="flex gap-2 mt-1 flex-wrap">{S.hist[S.industry].slice(-4).map((x,i)=><span key={i} className={`chip ${x.n?'c-am':'c-sl'}`}>{x.d} {x.h}h {x.n?'night':'day'}</span>)}</div>
+   </Panel>
+   <Panel title={ind.name+' tracker'} icon={ind.icon} tone="am">
+    <div className="grid grid-cols-3 gap-2">{metrics.map(([a,b,t],i)=><div key={i} className="p-2 rounded" style={{background:'var(--well)'}}><div className="lbl" style={{fontSize:10}}>{a}</div><div className="mono font-semibold mt-1" style={{color:t==='rd'?'#FCA5A5':t==='am'?'#FBBF24':'#34D399'}}>{b}</div></div>)}</div>
+    {S.industry==='education'&&<p className="text-xs mt-2" style={{color:'#FCA5A5'}}>Invigilation is over-allocated by 1 session. Raise it in the Grievance Vault.</p>}
+   </Panel>
+  </div></div>)}
+
+function Pay({S,up,ind}){
+ const t=L[S.lang],c=S.cyc[S.industry],live=S.checkIn?S.checkIn.el/36e5:0;
+ const reg=c.reg+Math.min(live,8),ot=c.ot+Math.max(0,live-8);
+ const base=reg*ind.rate,otp=ot*ind.rate*1.5,al=ind.allow.map(([k,v])=>[k,v]),alt=al.reduce((a,x)=>a+x[1],0),gross=base+otp+alt;
+ const pf=Math.round(base*.12),esi=Math.round(gross*.0075),pt=200,ded=pf+esi+pt,net=gross-ded;
+ const speak=()=>{if(!('speechSynthesis'in window))return alert('Text-to-speech is not supported in this browser.');speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(`${t.speech}: ${Math.round(net)} ${S.lang==='en'?'rupees':S.lang==='hi'?'रुपये':'ரூபாய்'}. ${t.base}: ${Math.round(base)}. ${t.ot}: ${Math.round(otp)}. ${t.al}: ${alt}. ${t.de}: ${ded}.`);u.lang=t.sp;speechSynthesis.speak(u)};
+ const Row=({a,b,sub,neg,strong})=><div className={`flex justify-between gap-3 py-2 ${strong?'font-bold':''}`} style={{borderBottom:'1px solid var(--line)'}}><span>{a}{sub&&<span className="block mono text-xs" style={{color:'var(--tx2)'}}>{sub}</span>}</span><span className="mono" style={{color:neg?'#FCA5A5':''}}>{neg?'− ':''}{inr(b)}</span></div>;
+ return(<Panel title={t.t} icon="wallet" right={<span className="chip c-em">Live cycle</span>}>
+  <div className="flex flex-wrap gap-2 mb-3 items-center">
+   <div role="group" aria-label="Language" className="flex p-1 rounded" style={{background:'var(--well)'}}>{[['en','EN'],['hi','हिं'],['ta','தமி']].map(([k,l])=><button key={k} aria-pressed={S.lang===k} className="px-4 py-2 rounded font-bold min-h-[44px]" style={S.lang===k?{background:'var(--em)',color:'var(--bg)'}:{color:'var(--tx2)'}} onClick={()=>up({lang:k})}>{l}</button>)}</div>
+   <button className="btn" onClick={speak}><Icon n="volume-2" s={18}/>Read aloud</button></div>
+  <Row a={t.base} sub={`${reg.toFixed(1)} ${t.hrs} × ${inr(ind.rate)}`} b={base}/>
+  <Row a={t.ot} sub={`${ot.toFixed(1)} ${t.hrs} × ${inr(ind.rate*1.5)}`} b={otp}/>
+  {al.map(([k,v])=><Row key={k} a={t[k]} b={v}/>)}
+  <Row a={t.gross} b={gross} strong/>
+  <Row a={t.pf} b={pf} neg/><Row a={t.esi} b={esi} neg/><Row a={t.pt} b={pt} neg/>
+  <div className="flex justify-between items-center mt-3 p-3 rounded" style={{background:'rgba(16,185,129,.15)',border:'1px solid var(--em)'}}><span className="font-bold">{t.net}</span><span className="mono text-2xl font-semibold" style={{color:'#34D399'}}>{inr(net)}</span></div>
+ </Panel>)}
+
+function Vault({S,up,worker}){
+ const [txt,setTxt]=useState(''),[cat,setCat]=useState('Safety'),[sev,setSev]=useState('Medium'),[tok,setTok]=useState(''),[look,setLook]=useState(''),[q,setQ]=useState(''),[copied,setCopied]=useState(false);
+ const SC={Low:'c-sl',Medium:'c-em',High:'c-am',Critical:'c-rd'},ST={Open:'c-rd','In review':'c-am',Resolved:'c-em'};
+ const submit=async()=>{const text=clean(txt).slice(0,500);if(text.length<10)return;
+  const token=await sha256(text+'|'+rnd(32)+'|'+performance.now()); // no user id, IP or device data is hashed or stored
+  up({g:[{tok:token,cat,sev,text,status:'Open',ts:Math.floor(Date.now()/36e5)*36e5},...S.g]});setTok(token);setTxt('')};
+ const found=S.g.find(x=>x.tok===clean(look).toLowerCase());
+ const list=S.g.filter(x=>!q||(x.text+x.cat+x.tok+x.status).toLowerCase().includes(clean(q).toLowerCase()));
+ if(worker)return(<div className="grid md:grid-cols-2 gap-4">
+  <Panel title="Anonymous report" icon="eye-off" tone="am" right={<span className="chip c-am">No profile</span>}>
+   <label htmlFor="g" className="lbl">What happened?</label>
+   <textarea id="g" className="inp mt-1" rows={5} maxLength={500} value={txt} onChange={e=>setTxt(e.target.value)} placeholder="Describe the issue. Do not include your name."/>
+   <div className="text-xs mono text-right" style={{color:'var(--tx2)'}}>{txt.length}/500</div>
+   <div className="grid grid-cols-2 gap-2 my-2"><select aria-label="Category" className="inp" value={cat} onChange={e=>setCat(e.target.value)}>{['Safety','Wages','Workload','Harassment','Other'].map(x=><option key={x}>{x}</option>)}</select>
+    <div role="group" aria-label="Severity" className="grid grid-cols-2 gap-1">{Object.keys(SC).map(s=><button key={s} aria-pressed={sev===s} className="btn" style={{minHeight:44,fontSize:13,borderColor:sev===s?'var(--am)':''}} onClick={()=>setSev(s)}>{s}</button>)}</div></div>
+   <button className="btn btn-p w-full" disabled={clean(txt).length<10} onClick={submit}><Icon n="shield-check" s={18}/>Submit anonymously</button>
+   {tok&&<div role="status" className="mt-3 p-3 rounded" style={{background:'var(--bg)',border:'1px solid var(--em)'}}><div className="lbl">Your tracking token · save it</div><div className="mono text-xs break-all my-2">{tok}</div>
+    <button className="btn" style={{minHeight:40}} onClick={()=>{navigator.clipboard&&navigator.clipboard.writeText(tok);setCopied(true)}}><Icon n="copy" s={16}/>{copied?'Copied':'Copy token'}</button></div>}
+  </Panel>
+  <Panel title="Track a report" icon="search">
+   <label htmlFor="t" className="lbl">Paste your 64-character token</label>
+   <input id="t" className="inp mono mt-1" value={look} onChange={e=>setLook(clean(e.target.value))} placeholder="e.g. 9f86d081…"/>
+   {look&&(found?<div className="mt-3 p-3 rounded" style={{background:'var(--bg)'}}><span className={`chip ${ST[found.status]}`}>{found.status}</span> <span className={`chip ${SC[found.sev]}`}>{found.sev}</span><p className="text-sm mt-2">{found.text}</p></div>:<p className="mt-3 text-sm" style={{color:'var(--tx2)'}}>No report matches this token.</p>)}
+   <p className="text-xs mt-4" style={{color:'var(--tx2)'}}>Only the text, category, severity and an hour-rounded timestamp are stored. The token is a SHA-256 hash with a random salt, so nobody can link it back to you.</p>
+  </Panel></div>);
+ return(<Panel title="Active grievances board" icon="megaphone" tone="am" right={<span className="chip c-am">{S.g.filter(x=>x.status!=='Resolved').length} unresolved</span>}>
+  <input aria-label="Search grievances" className="inp mb-3" value={q} onChange={e=>setQ(clean(e.target.value))} placeholder="Search text, category, status or token"/>
+  <div className="space-y-3">{list.length===0&&<p style={{color:'var(--tx2)'}}>No grievances match.</p>}{list.map(x=><article key={x.tok} className="p-3 rounded" style={{background:'var(--well)',border:'1px solid var(--line)'}}>
+   <div className="flex flex-wrap gap-2 items-center"><span className={`chip ${SC[x.sev]}`}>{x.sev}</span><span className="chip c-sl">{x.cat}</span><span className={`chip ${ST[x.status]}`}>{x.status}</span><span className="mono text-xs ml-auto" style={{color:'var(--tx2)'}}>{new Date(x.ts).toLocaleString()}</span></div>
+   <p className="my-2">{x.text}</p><div className="mono text-xs break-all mb-2" style={{color:'var(--tx2)'}}>{x.tok}</div>
+   <div className="flex gap-2 flex-wrap">{['Open','In review','Resolved'].map(s=><button key={s} aria-pressed={x.status===s} className="btn" style={{minHeight:40,fontSize:13,borderColor:x.status===s?'var(--em)':''}} onClick={()=>up({g:S.g.map(y=>y.tok===x.tok?{...y,status:s}:y)})}>{s==='Resolved'&&<Icon n="check-circle" s={15}/>}{s}</button>)}</div></article>)}</div></Panel>)}
+
+function Gauge({v}){const col=v>=100?'#DC2626':v>=85?'#F59E0B':'#10B981',L=Math.PI*70;
+ return <svg viewBox="0 0 160 100" className="w-full max-w-xs mx-auto" role="img" aria-label={`Crew fatigue index ${v} percent`}><path d="M10 85A70 70 0 0 1 150 85" fill="none" stroke="#0F172A" strokeWidth="14"/><path d="M10 85A70 70 0 0 1 150 85" fill="none" stroke={col} strokeWidth="14" strokeDasharray={`${Math.min(v,100)/100*L} ${L}`}/><text x="80" y="76" textAnchor="middle" fill="#F8FAFC" className="mono" fontSize="24" fontWeight="600">{v}%</text><text x="80" y="96" textAnchor="middle" fill="#94A3B8" fontSize="9">CREW FATIGUE INDEX</text></svg>}
+
+function Employer({S,up,ind}){
+ const f=fatigue(S,ind),live=S.checkIn?[{n:'You (demo worker)',r:'Live check-in',h:f.h,nt:f.b2b?2:0}]:[];
+ const crew=[...ind.crew,...live].map(c=>({...c,k:risk(c.h,c.nt)})),avg=Math.round(crew.reduce((a,c)=>a+c.k,0)/crew.length),hot=crew.filter(c=>c.k>=100).length;
+ return(<>
+  <div className="grid md:grid-cols-3 gap-4">
+   <Panel title="Fatigue gauge" icon="gauge" tone={avg>=100?'rd':avg>=85?'am':'em'}><Gauge v={avg}/><p className="text-center text-sm mt-1">{hot} of {crew.length} workers at lockout level</p></Panel>
+   <div className="md:col-span-2"><Panel title={`${ind.name} · crew status`} icon={ind.icon} tone="am">
+    <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="lbl text-left"><th className="py-2">Worker</th><th>Hours</th><th>Nights</th><th>Risk</th></tr></thead><tbody>{crew.map(c=><tr key={c.n} style={{borderTop:'1px solid var(--line)'}}><td className="py-2">{c.n}<span className="block text-xs" style={{color:'var(--tx2)'}}>{c.r}</span></td><td className="mono">{c.h.toFixed(1)}h</td><td className="mono">{c.nt}</td><td><span className={`chip ${c.k>=100?'c-rd':c.k>=85?'c-am':'c-em'}`}>{c.k>=100?'Lockout':c.k>=85?'Warning':'Safe'} {c.k}%</span></td></tr>)}</tbody></table></div>
+    <p className="text-xs mt-2" style={{color:'var(--tx2)'}}>Risk = hours ÷ 8 h, plus 15 points for two or more consecutive night shifts.</p>
+   </Panel></div></div>
+  <Vault S={S} up={up}/>
+ </>)}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

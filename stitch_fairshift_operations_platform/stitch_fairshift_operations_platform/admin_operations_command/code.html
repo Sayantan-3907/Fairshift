@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "primary-fixed": "#6ffbbe", "on-tertiary-fixed-variant": "#930013", "tertiary": "#ffb3ad", "surface-bright": "#2c3a4c", "on-error-container": "#ffdad6", "tertiary-container": "#ff7a73", "primary-container": "#10b981", "background": "#051424", "error": "#ffb4ab", "secondary-fixed-dim": "#ffb95f", "tertiary-fixed": "#ffdad7", "on-primary-container": "#00422b", "primary-fixed-dim": "#4edea3", "on-secondary-container": "#5b3800", "inverse-surface": "#d4e4fa", "on-surface": "#d4e4fa", "outline": "#86948a", "error-container": "#93000a", "inverse-on-surface": "#233143", "on-secondary-fixed-variant": "#653e00", "tertiary-fixed-dim": "#ffb3ad", "surface-container-low": "#0d1c2d", "on-tertiary": "#68000a", "on-surface-variant": "#bbcabf", "secondary-container": "#ee9800", "on-primary": "#003824", "outline-variant": "#3c4a42", "surface-container-lowest": "#010f1f", "surface-variant": "#273647", "secondary-fixed": "#ffddb8", "on-secondary-fixed": "#2a1700", "on-primary-fixed": "#002113", "surface": "#051424", "secondary": "#ffb95f", "surface-container": "#122131", "on-tertiary-fixed": "#410004", "on-secondary": "#472a00", "on-primary-fixed-variant": "#005236", "surface-container-high": "#1c2b3c", "on-error": "#690005", "primary": "#4edea3", "surface-dim": "#051424", "surface-container-highest": "#273647", "surface-tint": "#4edea3", "inverse-primary": "#006c49", "on-tertiary-container": "#79000e", "on-background": "#d4e4fa" }, borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, spacing: { "space-xs": "0.25rem", "margin": "1rem", "space-lg": "1.5rem", "space-md": "1rem", "space-sm": "0.5rem", "margin-desktop": "2rem", "gutter": "1rem", "space-xl": "2rem", "gutter-desktop": "1.5rem" }, fontFamily: { "headline-md": ["Inter"], "label-data-lg": ["JetBrains Mono"], "headline-xl-mobile": ["Inter"], "label-caps": ["Inter"], "label-data-md": ["JetBrains Mono"], "headline-xl": ["Inter"], "body-md": ["Inter"], "headline-lg": ["Inter"], "body-sm": ["Inter"], "label-data-sm": ["JetBrains Mono"], "body-lg": ["Inter"] }, fontSize: { "headline-md": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "label-data-lg": ["20px", { "lineHeight": "24px", "letterSpacing": "0.02em", "fontWeight": "600" }], "headline-xl-mobile": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "label-caps": ["11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "700" }], "label-data-md": ["14px", { "lineHeight": "18px", "letterSpacing": "0.01em", "fontWeight": "500" }], "headline-xl": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "headline-lg": ["24px", { "lineHeight": "30px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "label-data-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.03em", "fontWeight": "500" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }] } } } }</script><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#051424;}body{overscroll-behavior-y:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface font-body-md min-h-screen flex flex-col antialiased selection:bg-primary-container selection:text-on-primary-container"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.3)]"><div class="h-20 px-margin flex flex-col justify-center gap-space-xs"><div class="flex items-center justify-between"><div class="flex items-center gap-space-sm min-w-0"><img alt="FairShift Tactical Badge" class="h-8 w-auto object-contain flex-shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1WCGz2weaHKXOT7SoZgFwUZwOAVRzpJAE5KOBaTV9WgH7bZVRbPaBqxeoGQ6XTstpUL42f561IuawDyGe3580Xxwt18PT1STn2GH_YuOSYdpDNCe0zdcVJbnWuYHtEvAsMJrPX6P_CplI7nN5M35LtdX8qRQniL71p6zaqvoh0Ce5O_38ZtdZfwm987lRLRr4bCCtJAQKSunBKWCb6m-8O7_a5BGjxM1eMWX8qvDAXby0-17yU_-C_GxV9-"/><div class="flex flex-col min-w-0"><span class="font-label-caps text-label-caps uppercase tracking-wider text-primary truncate">FAIRSHIFT CORE</span><h1 class="font-headline-md text-headline-md text-on-surface truncate">Admin Ops</h1></div></div><div class="flex items-center gap-space-sm flex-shrink-0"><div aria-label="Operational View Mode" class="flex bg-surface-container-high p-0.5 rounded-lg" role="tablist"><button aria-selected="true" class="px-space-sm py-0.5 rounded text-on-primary font-label-caps text-label-caps bg-primary flex items-center justify-center min-h-[44px] min-w-[44px]" type="button">WRK</button><button aria-selected="false" class="px-space-sm py-0.5 rounded text-on-surface-variant hover:text-on-surface font-label-caps text-label-caps flex items-center justify-center min-h-[44px] min-w-[44px]" type="button">ADM</button></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div><div class="flex items-center justify-between font-label-data-sm text-label-data-sm text-on-surface-variant"><div class="flex items-center gap-1.5 min-w-0 truncate"><span class="w-2 h-2 rounded-full bg-primary-container inline-block flex-shrink-0"></span><span class="text-primary-container truncate font-semibold">GEO-FENCE: SECURE [SITE #08-B]</span></div><div class="flex items-center gap-2 flex-shrink-0 font-label-data-sm text-on-surface-variant"><span class="material-symbols-outlined text-[14px] text-primary">satellite_alt</span><span>SDG 8.8 ACTIVE</span></div></div></div></header><main class="flex flex-col relative w-full pt-20 pb-24 bg-surface min-h-screen"><div class="flex flex-col w-full text-on-surface">
+<!-- Operational Supervisor Meta Tray -->
+<section class="px-margin pt-space-md pb-space-sm bg-surface-container-low">
+<div class="p-space-md bg-surface-container rounded-lg shadow-sm">
+<div class="flex items-center justify-between pb-space-xs">
+<div class="flex items-center gap-space-xs min-w-0">
+<span class="w-2 h-2 rounded-full bg-primary flex-shrink-0 animate-pulse"></span>
+<span class="font-label-caps text-label-caps text-primary tracking-wider uppercase truncate">OPERATIONAL CONTROL COMMAND</span>
+</div>
+<span class="font-label-data-sm text-label-data-sm text-on-surface-variant flex-shrink-0">SDG 8.8 COMPLIANT</span>
+</div>
+<div class="mt-space-xs flex flex-col gap-1">
+<div class="flex items-center justify-between text-on-surface">
+<span class="font-body-sm text-body-sm text-on-surface-variant">SUPERVISOR:</span>
+<span class="font-label-data-md text-label-data-md text-on-surface font-semibold">S. Kulkarni <span class="text-primary font-normal">[ID: OP-9042]</span></span>
+</div>
+<div class="flex items-center justify-between text-on-surface">
+<span class="font-body-sm text-body-sm text-on-surface-variant">SITE NODE:</span>
+<span class="font-body-sm text-body-sm text-on-surface font-medium truncate max-w-[200px]">Metro Line 4 — Sector 8B</span>
+</div>
+</div>
+<div class="mt-space-sm pt-space-xs flex items-center justify-between font-label-data-sm text-label-data-sm text-on-surface-variant bg-surface-container-high/40 px-2 py-1 rounded">
+<div class="flex items-center gap-1.5 truncate">
+<span class="material-symbols-outlined text-[14px] text-primary">verified_user</span>
+<span class="truncate">TELEMETRY SYNC: 100% LIVE</span>
+</div>
+<span class="text-primary font-mono font-semibold" id="sys-clock">14:38:09 UTC+5.5</span>
+</div>
+</div>
+</section>
+<!-- Executive Metric Tiles (2x2 Tactical Grid) -->
+<section class="px-margin py-space-sm">
+<div class="flex items-center justify-between mb-space-xs">
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant tracking-wider">EXECUTIVE METRIC TILES</span>
+<span class="font-label-data-sm text-label-data-sm text-primary">REAL-TIME AGGREGATION</span>
+</div>
+<div class="grid grid-cols-2 gap-space-sm">
+<!-- Tile 1: Active On-Site Workforce -->
+<div class="p-space-sm bg-surface-container rounded-lg flex flex-col justify-between shadow-sm">
+<div>
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">ACTIVE WORKFORCE</span>
+<span class="material-symbols-outlined text-[16px] text-primary">groups</span>
+</div>
+<div class="mt-1 font-label-data-lg text-label-data-lg text-primary tracking-tight">142<span class="text-on-surface-variant text-body-sm"> / 150</span></div>
+</div>
+<div class="mt-space-xs pt-space-xs">
+<div class="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
+<div class="bg-primary h-1 rounded-full" style="width: 94.6%;"></div>
+</div>
+<div class="mt-1 flex items-center justify-between font-label-data-sm text-label-data-sm">
+<span class="text-on-surface-variant">DEPLOYMENT</span>
+<span class="text-primary font-semibold">94.6%</span>
+</div>
+</div>
+</div>
+<!-- Tile 2: Fatigue Risk Index -->
+<div class="p-space-sm bg-surface-container rounded-lg flex flex-col justify-between shadow-sm">
+<div>
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps text-secondary-fixed-dim uppercase">FATIGUE RISK</span>
+<span class="material-symbols-outlined text-[16px] text-secondary">warning</span>
+</div>
+<div class="mt-1 font-label-data-lg text-label-data-lg text-secondary tracking-tight">14.2%</div>
+</div>
+<div class="mt-space-xs pt-space-xs">
+<div class="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
+<div class="bg-secondary h-1 rounded-full" style="width: 14.2%;"></div>
+</div>
+<div class="mt-1 flex items-center justify-between font-label-data-sm text-label-data-sm">
+<span class="text-on-surface-variant">ALERT ZONE</span>
+<span class="text-secondary font-semibold">21 CRITICAL</span>
+</div>
+</div>
+</div>
+<!-- Tile 3: Open Safety Grievances -->
+<div class="p-space-sm bg-surface-container rounded-lg flex flex-col justify-between shadow-sm">
+<div>
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps text-tertiary-container uppercase">SAFETY FLAGS</span>
+<span class="material-symbols-outlined text-[16px] text-tertiary-container">crisis_alert</span>
+</div>
+<div class="mt-1 font-label-data-lg text-label-data-lg text-tertiary-container tracking-tight">03 ACTIVE</div>
+</div>
+<div class="mt-space-xs pt-space-xs flex items-center justify-between font-label-data-sm text-label-data-sm bg-surface-container-highest/30 px-1 py-0.5 rounded">
+<span class="text-error font-semibold">1 LOCKOUT</span>
+<span class="text-on-surface-variant">2 REVIEW</span>
+</div>
+</div>
+<!-- Tile 4: Overtime Budget Tracking -->
+<div class="p-space-sm bg-surface-container rounded-lg flex flex-col justify-between shadow-sm">
+<div>
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">OT EXPENDITURE</span>
+<span class="material-symbols-outlined text-[16px] text-primary">payments</span>
+</div>
+<div class="mt-1 font-label-data-md text-label-data-md text-on-surface font-semibold tracking-tight">₹142,800</div>
+</div>
+<div class="mt-space-xs pt-space-xs">
+<div class="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
+<div class="bg-secondary h-1 rounded-full" style="width: 79.3%;"></div>
+</div>
+<div class="mt-1 flex items-center justify-between font-label-data-sm text-label-data-sm">
+<span class="text-on-surface-variant">CAP: ₹180K</span>
+<span class="text-secondary font-semibold">79.3%</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Visual Shift Cadence Breakdown Mini-Chart -->
+<section class="px-margin py-space-sm">
+<div class="p-space-md bg-surface-container rounded-lg shadow-sm">
+<div class="flex items-center justify-between mb-space-xs">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">SHIFT TELEMETRY DISTRIBUTION</span>
+<span class="font-label-data-sm text-label-data-sm text-primary">8H STANDARD BASELINE</span>
+</div>
+<div class="grid grid-cols-6 gap-1 h-14 items-end pt-2 pb-1">
+<div class="flex flex-col items-center gap-1 h-full justify-end">
+<div class="w-full bg-primary rounded-t" style="height: 40%;"></div>
+<span class="font-label-data-sm text-[9px] text-on-surface-variant">0-4h</span>
+</div>
+<div class="flex flex-col items-center gap-1 h-full justify-end">
+<div class="w-full bg-primary rounded-t" style="height: 70%;"></div>
+<span class="font-label-data-sm text-[9px] text-on-surface-variant">4-6h</span>
+</div>
+<div class="flex flex-col items-center gap-1 h-full justify-end">
+<div class="w-full bg-primary rounded-t" style="height: 95%;"></div>
+<span class="font-label-data-sm text-[9px] text-on-surface-variant">6-8h</span>
+</div>
+<div class="flex flex-col items-center gap-1 h-full justify-end">
+<div class="w-full bg-secondary rounded-t" style="height: 55%;"></div>
+<span class="font-label-data-sm text-[9px] text-secondary">8-9h</span>
+</div>
+<div class="flex flex-col items-center gap-1 h-full justify-end">
+<div class="w-full bg-error rounded-t" style="height: 25%;"></div>
+<span class="font-label-data-sm text-[9px] text-error font-bold">9-10h</span>
+</div>
+<div class="flex flex-col items-center gap-1 h-full justify-end">
+<div class="w-full bg-error-container rounded-t" style="height: 10%;"></div>
+<span class="font-label-data-sm text-[9px] text-error-container">&gt;10h</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Workforce Fatigue Board -->
+<section class="px-margin py-space-sm flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[18px]">badge</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">WORKFORCE FATIGUE TELEMETRY</h2>
+</div>
+<span class="px-2 py-0.5 rounded bg-surface-container-high font-label-data-sm text-label-data-sm text-primary">LIVE QUEUE</span>
+</div>
+<!-- Worker 1: R. Sharma (CRITICAL STANDDOWN) -->
+<div class="p-space-md bg-surface-container rounded-lg shadow-sm flex flex-col gap-space-xs" id="worker-card-sharma">
+<div class="flex items-start justify-between">
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-headline-md text-headline-md text-on-surface font-semibold truncate">R. Sharma</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high font-label-data-sm text-label-data-sm text-on-surface-variant">TECH-089</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Rigging Tech • Tower 4 Rig</span>
+</div>
+<span class="px-2 py-1 rounded bg-error-container font-label-caps text-label-caps text-on-error-container uppercase">
+          LOCKOUT REQUIRED
+        </span>
+</div>
+<div class="grid grid-cols-2 gap-space-xs py-space-xs bg-surface-container-low px-space-sm rounded">
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant block">CURRENT SHIFT</span>
+<span class="font-label-data-md text-label-data-md text-error font-bold">09h 15m ELAPSED</span>
+</div>
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant block">STREAK LOG</span>
+<span class="font-label-data-md text-label-data-md text-error font-bold">6 CONSECUTIVE DAYS</span>
+</div>
+</div>
+<div class="flex items-center justify-between gap-space-sm pt-space-xs">
+<div class="flex items-center gap-1 font-body-sm text-body-sm text-error">
+<span class="material-symbols-outlined text-[16px]">dangerous</span>
+<span>Over legal 8h cap (SDG 8.8)</span>
+</div>
+<button class="px-space-md py-2 rounded bg-error hover:bg-error-container text-on-error font-label-caps text-label-caps font-bold transition-all flex items-center gap-1 shadow min-h-[44px]" onclick="enforceStanddown('worker-card-sharma', 'R. Sharma')" type="button">
+<span class="material-symbols-outlined text-[16px]">front_hand</span>
+          ENFORCE STANDDOWN
+        </button>
+</div>
+</div>
+<!-- Worker 2: A. Patel (CAUTION) -->
+<div class="p-space-md bg-surface-container rounded-lg shadow-sm flex flex-col gap-space-xs">
+<div class="flex items-start justify-between">
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-headline-md text-headline-md text-on-surface font-semibold truncate">A. Patel</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high font-label-data-sm text-label-data-sm text-on-surface-variant">SCAF-412</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Scaffold Lead • Sector 8 Elevators</span>
+</div>
+<span class="px-2 py-1 rounded bg-secondary-container font-label-caps text-label-caps text-on-secondary-container uppercase">
+          CAUTION [20M DUE]
+        </span>
+</div>
+<div class="grid grid-cols-2 gap-space-xs py-space-xs bg-surface-container-low px-space-sm rounded">
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant block">CURRENT SHIFT</span>
+<span class="font-label-data-md text-label-data-md text-secondary font-bold">07h 40m ELAPSED</span>
+</div>
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant block">STREAK LOG</span>
+<span class="font-label-data-md text-label-data-md text-on-surface font-semibold">4 Consecutive Days</span>
+</div>
+</div>
+<div class="flex items-center justify-between gap-space-sm pt-space-xs">
+<div class="flex items-center gap-1 font-body-sm text-body-sm text-secondary">
+<span class="material-symbols-outlined text-[16px]">schedule</span>
+<span>Rotation cue triggered</span>
+</div>
+<button class="px-space-md py-2 rounded bg-surface-container-high hover:bg-surface-bright text-on-surface font-label-caps text-label-caps transition-all flex items-center gap-1 min-h-[44px]" type="button">
+<span class="material-symbols-outlined text-[16px]">swap_horiz</span>
+          QUEUE RELIEF
+        </button>
+</div>
+</div>
+<!-- Worker 3: M. Joseph (GREEN) -->
+<div class="p-space-md bg-surface-container rounded-lg shadow-sm flex flex-col gap-space-xs">
+<div class="flex items-start justify-between">
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-headline-md text-headline-md text-on-surface font-semibold truncate">M. Joseph</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high font-label-data-sm text-label-data-sm text-on-surface-variant">ELEC-104</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Electrical Conduit Specialist</span>
+</div>
+<span class="px-2 py-1 rounded bg-primary-container/20 font-label-caps text-label-caps text-primary uppercase">
+          OPTIMAL
+        </span>
+</div>
+<div class="grid grid-cols-2 gap-space-xs py-space-xs bg-surface-container-low px-space-sm rounded">
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant block">CURRENT SHIFT</span>
+<span class="font-label-data-md text-label-data-md text-primary font-bold">05h 10m ELAPSED</span>
+</div>
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant block">STREAK LOG</span>
+<span class="font-label-data-md text-label-data-md text-on-surface font-semibold">2 Consecutive Days</span>
+</div>
+</div>
+</div>
+<!-- Worker 4: D. Kumar (GREEN) -->
+<div class="p-space-md bg-surface-container rounded-lg shadow-sm flex flex-col gap-space-xs">
+<div class="flex items-start justify-between">
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-headline-md text-headline-md text-on-surface font-semibold truncate">D. Kumar</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high font-label-data-sm text-label-data-sm text-on-surface-variant">MASN-302</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Site Mason • Tunnel Wall Lining</span>
+</div>
+<span class="px-2 py-1 rounded bg-primary-container/20 font-label-caps text-label-caps text-primary uppercase">
+          OPTIMAL
+        </span>
+</div>
+<div class="grid grid-cols-2 gap-space-xs py-space-xs bg-surface-container-low px-space-sm rounded">
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant block">CURRENT SHIFT</span>
+<span class="font-label-data-md text-label-data-md text-primary font-bold">04h 30m ELAPSED</span>
+</div>
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant block">STREAK LOG</span>
+<span class="font-label-data-md text-label-data-md text-on-surface font-semibold">3 Consecutive Days</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Active Safety & Grievance Feed -->
+<section class="px-margin py-space-sm flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-tertiary-container text-[18px]">verified</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">SAFETY &amp; GRIEVANCE FEED</h2>
+</div>
+<span class="font-label-data-sm text-label-data-sm text-on-surface-variant">ILO C155 PROTOCOL</span>
+</div>
+<!-- Grievance 1: Critical Latch Failure -->
+<div class="p-space-md bg-surface-container rounded-lg shadow-sm flex flex-col gap-space-sm" id="grievance-item-1">
+<div class="flex items-start justify-between gap-2">
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-error flex-shrink-0 animate-ping"></span>
+<span class="font-label-data-md text-label-data-md text-error font-bold truncate">CRITICAL HAZARD</span>
+</div>
+<h3 class="font-body-lg text-body-lg text-on-surface font-semibold mt-1">Scaffolding Harness Latch Failure</h3>
+<span class="font-label-data-sm text-label-data-sm text-on-surface-variant mt-0.5">Hash #7e3a9 • Block C-3 • Reported 24m ago</span>
+</div>
+<span class="px-2 py-1 rounded bg-error-container font-label-caps text-label-caps text-on-error-container uppercase flex-shrink-0">
+          LOCKOUT PENDING
+        </span>
+</div>
+<div class="p-space-sm bg-surface-container-low rounded font-body-sm text-body-sm text-on-surface-variant">
+        "Secondary safety carabiner pin warped on West Rig 3. Work at elevation halted pending verified certified harness replacement."
+      </div>
+<div class="flex flex-wrap items-center gap-space-sm pt-space-xs">
+<button class="flex-1 px-space-sm py-2 rounded bg-primary text-on-primary font-label-caps text-label-caps font-bold transition-transform active:scale-95 flex items-center justify-center gap-1 min-h-[44px]" onclick="dispatchOfficer(this)" type="button">
+<span class="material-symbols-outlined text-[16px]">local_police</span>
+          DISPATCH SAFETY OFFICER
+        </button>
+<button class="px-space-md py-2 rounded bg-surface-container-high hover:bg-surface-bright text-on-surface font-label-caps text-label-caps transition-all flex items-center justify-center gap-1 min-h-[44px]" onclick="resolveGrievance('grievance-item-1')" type="button">
+<span class="material-symbols-outlined text-[16px]">check_circle</span>
+          RESOLVE
+        </button>
+</div>
+</div>
+<!-- Grievance 2: Overtime Dispute -->
+<div class="p-space-md bg-surface-container rounded-lg shadow-sm flex flex-col gap-space-sm" id="grievance-item-2">
+<div class="flex items-start justify-between gap-2">
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary text-[16px]">pending_actions</span>
+<span class="font-label-data-md text-label-data-md text-secondary font-bold truncate">OVERTIME AUDIT DISPUTE</span>
+</div>
+<h3 class="font-body-lg text-body-lg text-on-surface font-semibold mt-1">Unrecorded Shift Extension (+1.5h)</h3>
+<span class="font-label-data-sm text-label-data-sm text-on-surface-variant mt-0.5">Hash #b419c • Night Shift Crew • Auto-Flagged</span>
+</div>
+<span class="px-2 py-1 rounded bg-secondary-container font-label-caps text-label-caps text-on-secondary-container uppercase flex-shrink-0">
+          AUDIT IN PROGRESS
+        </span>
+</div>
+<div class="p-space-sm bg-surface-container-low rounded font-body-sm text-body-sm text-on-surface-variant">
+        "Biometric exit checkout mismatch: +90 min overtime claimed for emergency pour completion. Requires digital supervisor sign-off."
+      </div>
+<div class="flex items-center justify-between gap-space-sm pt-space-xs">
+<span class="font-label-data-sm text-label-data-sm text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">assured_workload</span>
+          ESCROW RESERVED: ₹3,150
+        </span>
+<button class="px-space-md py-2 rounded bg-primary text-on-primary font-label-caps text-label-caps font-bold transition-transform active:scale-95 flex items-center gap-1 min-h-[44px]" onclick="resolveGrievance('grievance-item-2')" type="button">
+<span class="material-symbols-outlined text-[16px]">draw</span>
+          APPROVE &amp; LEDGER
+        </button>
+</div>
+</div>
+</section>
+<!-- Regulatory Compliance & Export Banner Footer -->
+<section class="px-margin py-space-md bg-surface-container-lowest">
+<div class="p-space-md bg-surface-container rounded-lg shadow-md flex flex-col gap-space-sm">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded bg-primary-container/20 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-primary text-[20px]">policy</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-caps text-label-caps uppercase text-primary tracking-wide">COMPLIANCE CERTIFICATE</span>
+<span class="font-body-sm text-body-sm text-on-surface truncate">ILO C155 &amp; SDG 8.8 AUDIT READY</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+        Current site snapshot meets International Labour Organization occupational safety parameters. Continuous cryptographic ledgering active.
+      </p>
+<div class="grid grid-cols-2 gap-space-sm pt-space-xs">
+<button class="px-space-sm py-2.5 rounded bg-surface-container-high hover:bg-surface-bright text-on-surface font-label-caps text-label-caps font-bold flex items-center justify-center gap-1.5 transition-colors min-h-[44px]" onclick="triggerExport('CSV')" type="button">
+<span class="material-symbols-outlined text-[16px] text-primary">table_view</span>
+          EXPORT CSV
+        </button>
+<button class="px-space-sm py-2.5 rounded bg-primary text-on-primary font-label-caps text-label-caps font-bold flex items-center justify-center gap-1.5 transition-transform active:scale-95 shadow min-h-[44px]" onclick="triggerExport('PDF')" type="button">
+<span class="material-symbols-outlined text-[16px]">picture_as_pdf</span>
+          EXPORT PDF
+        </button>
+</div>
+</div>
+</section>
+<!-- Notification Toast Modal Slot (Interactive) -->
+<div class="hidden fixed bottom-20 left-4 right-4 z-50 p-space-md rounded-lg bg-surface-container-highest shadow-xl transition-all" id="admin-toast">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2 min-w-0">
+<span class="material-symbols-outlined text-primary text-[20px]" id="toast-icon">task_alt</span>
+<span class="font-label-data-sm text-label-data-sm text-on-surface truncate" id="toast-msg">Action processed successfully</span>
+</div>
+<button class="p-1 text-on-surface-variant hover:text-on-surface" onclick="closeToast()" type="button">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+</div>
+</div>
+<script>
+  function enforceStanddown(cardId, workerName) {
+    const card = document.getElementById(cardId);
+    if (card) {
+      card.classList.add('opacity-75');
+      const btn = card.querySelector('button');
+      if (btn) {
+        btn.disabled = true;
+        btn.className = 'px-space-md py-2 rounded bg-surface-container-highest text-on-surface-variant font-label-caps text-label-caps cursor-not-allowed flex items-center gap-1 min-h-[44px]';
+        btn.innerHTML = '<span class="material-symbols-outlined text-[16px]">lock</span> STANDDOWN ENFORCED';
+      }
+      showToast('CRITICAL STANDDOWN ACTIVATED: ' + workerName + ' biometric lockout engaged.');
+    }
+  }
+
+  function dispatchOfficer(buttonElem) {
+    buttonElem.disabled = true;
+    buttonElem.className = 'flex-1 px-space-sm py-2 rounded bg-surface-container-highest text-on-surface-variant font-label-caps text-label-caps cursor-not-allowed flex items-center justify-center gap-1 min-h-[44px]';
+    buttonElem.innerHTML = '<span class="material-symbols-outlined text-[16px]">check</span> OFFICER EN ROUTE';
+    showToast('SAFETY OFFICER DISPATCHED TO SECTOR 8B / BLOCK C-3');
+  }
+
+  function resolveGrievance(itemId) {
+    const item = document.getElementById(itemId);
+    if (item) {
+      item.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+      item.style.opacity = '0.5';
+      showToast('Grievance logged into immutable audit ledger.');
+    }
+  }
+
+  function triggerExport(format) {
+    showToast('GENERATING ' + format + ' EXPORT: ILO C155 & SDG 8.8 AUDIT PACKAGE');
+  }
+
+  function showToast(text) {
+    const toast = document.getElementById('admin-toast');
+    const msg = document.getElementById('toast-msg');
+    if (toast && msg) {
+      msg.textContent = text;
+      toast.classList.remove('hidden');
+      setTimeout(() => {
+        closeToast();
+      }, 4000);
+    }
+  }
+
+  function closeToast() {
+    const toast = document.getElementById('admin-toast');
+    if (toast) {
+      toast.classList.add('hidden');
+    }
+  }
+
+  // Update clock every second for telemetry immersion
+  setInterval(() => {
+    const clockEl = document.getElementById('sys-clock');
+    if (clockEl) {
+      const now = new Date();
+      const hrs = String(now.getUTCHours() + 5).padStart(2, '0');
+      const mins = String(now.getUTCMinutes() + 30).padStart(2, '0');
+      const secs = String(now.getUTCSeconds()).padStart(2, '0');
+      clockEl.textContent = hrs + ':' + mins + ':' + secs + ' UTC+5.5';
+    }
+  }, 1000);
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_-1px_8px_rgba(0,0,0,0.3)]" data-active-classes="text-primary bg-surface-container-high/60"><div class="grid grid-cols-5 items-stretch h-16"><a class="flex flex-col items-center justify-center min-h-[44px] min-w-[44px] text-on-surface-variant hover:text-on-surface transition-colors" data-path="shift-timer" href="#"><span class="material-symbols-outlined text-[20px]">timer</span><span class="font-label-caps text-label-caps tracking-tight mt-0.5 text-center truncate w-full px-1">SHIFT</span></a><a class="flex flex-col items-center justify-center min-h-[44px] min-w-[44px] text-on-surface-variant hover:text-on-surface transition-colors" data-path="fatigue-monitor" href="#"><span class="material-symbols-outlined text-[20px]">monitor_heart</span><span class="font-label-caps text-label-caps tracking-tight mt-0.5 text-center truncate w-full px-1">FATIGUE</span></a><a class="flex flex-col items-center justify-center min-h-[44px] min-w-[44px] text-on-surface-variant hover:text-on-surface transition-colors" data-path="payslip-ledger" href="#"><span class="material-symbols-outlined text-[20px]">receipt_long</span><span class="font-label-caps text-label-caps tracking-tight mt-0.5 text-center truncate w-full px-1">PAYSLIP</span></a><a class="flex flex-col items-center justify-center min-h-[44px] min-w-[44px] text-on-surface-variant hover:text-on-surface transition-colors" data-path="grievance-vault" href="#"><span class="material-symbols-outlined text-[20px]">shield_lock</span><span class="font-label-caps text-label-caps tracking-tight mt-0.5 text-center truncate w-full px-1">VAULT</span></a><a aria-current="page" class="flex flex-col items-center justify-center min-h-[44px] min-w-[44px] transition-colors text-primary bg-surface-container-high/60" data-path="admin-ops" href="#"><span class="material-symbols-outlined text-[20px]">terminal</span><span class="font-label-caps text-label-caps tracking-tight mt-0.5 text-center truncate w-full px-1">OPS</span></a></div></nav></body></html>
